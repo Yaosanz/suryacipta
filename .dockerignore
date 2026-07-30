@@ -1,0 +1,16 @@
+.env
+.env.*
+.git
+.github
+.tmp
+**/.git
+**/.next
+**/node_modules
+**/vendor
+**/storage/logs
+**/*.log
+**/*.pem
+**/*.key
+desktop-home.png
+mobile-home.png
+visual-*.png

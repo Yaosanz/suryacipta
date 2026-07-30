@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#17394a"/>
+  <path d="M0 520L310 270l190 150 245-220 455 320v110H0z" fill="#102d3b"/>
+  <path d="M60 80h8v470h-8zm1070 0h8v470h-8z" fill="#c39a3c"/>
+  <text x="100" y="230" fill="#c39a3c" font-family="Georgia,serif" font-size="34">CV. SURYA CIPTA</text>
+  <text x="100" y="315" fill="#ffffff" font-family="Georgia,serif" font-size="72" font-weight="700">ESTETICA MANDIRI</text>
+  <text x="100" y="380" fill="#ffffff" font-family="Arial,sans-serif" font-size="30">Spesialis GRC Panel Cetak &amp; Instalasi di Bogor</text>
+</svg>
