@@ -20,19 +20,29 @@ class ProductsTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label('Nama produk')
                     ->searchable(),
                 TextColumn::make('category')
+                    ->label('Kategori')
+                    ->badge()
                     ->searchable(),
-                ImageColumn::make('image_path'),
+                ImageColumn::make('image_path')
+                    ->label('Foto')
+                    ->disk('public'),
                 TextColumn::make('sort_order')
+                    ->label('Urutan')
                     ->numeric()
                     ->sortable(),
                 IconColumn::make('is_featured')
+                    ->label('Unggulan')
                     ->boolean(),
                 IconColumn::make('is_published')
+                    ->label('Tampil')
                     ->boolean(),
                 TextColumn::make('published_at')
-                    ->dateTime()
+                    ->label('Waktu terbit')
+                    ->dateTime('d M Y H:i')
+                    ->placeholder('Belum terbit')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -59,6 +69,9 @@ class ProductsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-            ])->defaultSort('sort_order');
+            ])
+            ->emptyStateHeading('Belum ada produk')
+            ->emptyStateDescription('Tambahkan produk pertama untuk mulai mengisi katalog website.')
+            ->defaultSort('sort_order');
     }
 }

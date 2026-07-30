@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\MediaAssets\Schemas;
 
-use Filament\Forms\Components\FileUpload;
+use App\Filament\Forms\CmsImageUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class MediaAssetForm
@@ -15,16 +16,24 @@ class MediaAssetForm
         return $schema
             ->components([
                 Hidden::make('disk')->default('public'),
-                FileUpload::make('file_path')
-                    ->label('Berkas gambar')->required()
-                    ->disk('public')->directory('cms/media')->visibility('public')
-                    ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                    ->maxSize(5120)->imageEditor()->orientImagesFromExif()
-                    ->preventFilePathTampering(),
-                TextInput::make('alt_text')
-                    ->label('Teks alternatif')->required()->maxLength(180),
-                Textarea::make('caption')
-                    ->maxLength(500)
+                Section::make('Unggah gambar')
+                    ->description('Simpan aset yang siap digunakan pada konten website.')
+                    ->schema([
+                        CmsImageUpload::make('file_path', 'Berkas gambar', 'cms/media')
+                            ->required(),
+                        TextInput::make('alt_text')
+                            ->label('Deskripsi gambar')
+                            ->placeholder('Contoh: Ornamen GRC bermotif geometris warna putih')
+                            ->helperText('Deskripsi singkat ini membantu aksesibilitas dan SEO.')
+                            ->required()
+                            ->maxLength(180),
+                        Textarea::make('caption')
+                            ->label('Keterangan tambahan')
+                            ->placeholder('Opsional: sumber foto atau keterangan penggunaan.')
+                            ->maxLength(500)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2)
                     ->columnSpanFull(),
             ]);
     }

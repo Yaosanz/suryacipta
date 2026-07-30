@@ -20,22 +20,31 @@ class PageSectionsTable
         return $table
             ->columns([
                 TextColumn::make('page')
+                    ->label('Halaman')
+                    ->formatStateUsing(fn (string $state): string => $state === 'home' ? 'Halaman utama' : ucfirst($state))
+                    ->badge()
                     ->searchable(),
                 TextColumn::make('section_key')
-                    ->searchable(),
-                TextColumn::make('eyebrow')
+                    ->label('Bagian')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'hero' => 'Pembuka (Hero)',
+                        'about' => 'Tentang perusahaan',
+                        'cta' => 'Ajakan menghubungi',
+                        default => ucfirst($state),
+                    })
                     ->searchable(),
                 TextColumn::make('title')
+                    ->label('Judul')
+                    ->limit(60)
                     ->searchable(),
-                ImageColumn::make('image_path'),
-                ImageColumn::make('image_alt'),
-                TextColumn::make('primary_cta_label')
-                    ->searchable(),
-                TextColumn::make('primary_cta_url')
-                    ->searchable(),
+                ImageColumn::make('image_path')
+                    ->label('Gambar')
+                    ->disk('public'),
                 IconColumn::make('is_enabled')
+                    ->label('Tampil')
                     ->boolean(),
                 TextColumn::make('sort_order')
+                    ->label('Urutan')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -63,6 +72,9 @@ class PageSectionsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada bagian halaman')
+            ->emptyStateDescription('Tambahkan bagian pembuka, tentang perusahaan, atau ajakan menghubungi.')
+            ->defaultSort('sort_order');
     }
 }

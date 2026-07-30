@@ -19,15 +19,21 @@ class TestimonialsTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label('Nama pelanggan')
                     ->searchable(),
                 TextColumn::make('company_role')
+                    ->label('Jabatan / perusahaan')
+                    ->placeholder('Tidak dicantumkan')
                     ->searchable(),
                 TextColumn::make('rating')
-                    ->numeric()
+                    ->label('Nilai')
+                    ->formatStateUsing(fn (int $state): string => $state.' / 5')
                     ->sortable(),
                 IconColumn::make('is_published')
+                    ->label('Tampil')
                     ->boolean(),
                 TextColumn::make('sort_order')
+                    ->label('Urutan')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -55,6 +61,9 @@ class TestimonialsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada testimoni')
+            ->emptyStateDescription('Tambahkan testimoni pelanggan yang telah memberikan persetujuan.')
+            ->defaultSort('sort_order');
     }
 }

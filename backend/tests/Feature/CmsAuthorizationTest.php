@@ -8,9 +8,17 @@ use App\Models\BlogPost;
 use App\Models\Inquiry;
 use App\Models\Product;
 use App\Models\User;
+use App\Policies\ActivityPolicy;
 use App\Policies\BlogPostPolicy;
+use App\Policies\FaqPolicy;
 use App\Policies\InquiryPolicy;
+use App\Policies\MediaAssetPolicy;
+use App\Policies\PageSectionPolicy;
+use App\Policies\PortfolioProjectPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\SiteSettingPolicy;
+use App\Policies\TestimonialPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -66,6 +74,91 @@ class CmsAuthorizationTest extends TestCase
         $post = new BlogPost(['status' => PublicationStatus::Published]);
 
         $this->assertFalse((new BlogPostPolicy)->update($editor, $post));
+    }
+
+    public function test_all_cms_policies_define_every_ability_required_by_strict_authorization(): void
+    {
+        $abilities = [
+            'viewAny',
+            'view',
+            'create',
+            'update',
+            'delete',
+            'deleteAny',
+            'restore',
+            'restoreAny',
+            'forceDelete',
+            'forceDeleteAny',
+            'replicate',
+            'reorder',
+        ];
+        $policies = [
+            ActivityPolicy::class,
+            BlogPostPolicy::class,
+            FaqPolicy::class,
+            InquiryPolicy::class,
+            MediaAssetPolicy::class,
+            PageSectionPolicy::class,
+            PortfolioProjectPolicy::class,
+            ProductPolicy::class,
+            SiteSettingPolicy::class,
+            TestimonialPolicy::class,
+            UserPolicy::class,
+        ];
+
+        foreach ($policies as $policy) {
+            foreach ($abilities as $ability) {
+                $this->assertTrue(
+                    method_exists($policy, $ability),
+                    "{$policy} must define or inherit {$ability}().",
+                );
+            }
+        }
+    }
+
+    public function test_super_admin_can_render_every_cms_list_without_authorization_errors(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::SuperAdmin,
+            'is_active' => true,
+        ]);
+        $admin->app_authentication_secret = 'local-test-secret';
+        $admin->save();
+
+        $this->actingAs($admin);
+
+        foreach ([
+            '/admin/activities',
+            '/admin/blog-posts',
+            '/admin/faqs',
+            '/admin/inquiries',
+            '/admin/media-assets',
+            '/admin/page-sections',
+            '/admin/portfolio-projects',
+            '/admin/products',
+            '/admin/site-settings',
+            '/admin/testimonials',
+            '/admin/users',
+        ] as $path) {
+            $this->get($path)->assertOk();
+        }
+
+        foreach ([
+            '/admin/blog-posts/create',
+            '/admin/faqs/create',
+            '/admin/media-assets/create',
+            '/admin/page-sections/create',
+            '/admin/portfolio-projects/create',
+            '/admin/products/create',
+            '/admin/site-settings/create',
+            '/admin/testimonials/create',
+            '/admin/users/create',
+        ] as $path) {
+            $this->get($path)->assertOk();
+        }
+
+        $this->get('/admin/activities/create')->assertNotFound();
+        $this->get('/admin/inquiries/create')->assertNotFound();
     }
 
     public function test_inquiry_audit_does_not_store_customer_message(): void

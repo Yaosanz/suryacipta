@@ -17,7 +17,7 @@ class InquiryResource extends Resource
 {
     protected static ?string $model = Inquiry::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelopeOpen;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Prospek';
 
@@ -25,9 +25,11 @@ class InquiryResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $modelLabel = 'permintaan';
+    protected static ?string $modelLabel = 'permintaan penawaran';
 
-    protected static ?string $pluralModelLabel = 'permintaan';
+    protected static ?string $pluralModelLabel = 'permintaan penawaran';
+
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
     {

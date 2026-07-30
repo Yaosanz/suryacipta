@@ -40,6 +40,9 @@ class AdminPanelProvider extends PanelProvider
             ], isRequired: true)
             ->strictAuthorization()
             ->brandName('Surya Cipta CMS')
+            ->sidebarCollapsibleOnDesktop()
+            ->unsavedChangesAlerts()
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->colors([
                 'primary' => Color::Emerald,
             ])

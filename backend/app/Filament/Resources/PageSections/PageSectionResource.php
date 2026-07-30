@@ -20,17 +20,19 @@ class PageSectionResource extends Resource
 {
     protected static ?string $model = PageSection::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedHomeModern;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Konten';
 
-    protected static ?string $navigationLabel = 'Section Halaman';
+    protected static ?string $navigationLabel = 'Bagian Halaman';
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $modelLabel = 'section halaman';
+    protected static ?string $modelLabel = 'bagian halaman';
 
-    protected static ?string $pluralModelLabel = 'section halaman';
+    protected static ?string $pluralModelLabel = 'bagian halaman';
+
+    protected static ?string $recordTitleAttribute = 'title';
 
     public static function form(Schema $schema): Schema
     {

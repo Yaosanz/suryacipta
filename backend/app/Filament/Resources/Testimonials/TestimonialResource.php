@@ -20,17 +20,19 @@ class TestimonialResource extends Resource
 {
     protected static ?string $model = Testimonial::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleLeftRight;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Konten';
 
-    protected static ?string $navigationLabel = 'Testimonial';
+    protected static ?string $navigationLabel = 'Testimoni';
 
     protected static ?int $navigationSort = 60;
 
-    protected static ?string $modelLabel = 'testimonial';
+    protected static ?string $modelLabel = 'testimoni';
 
-    protected static ?string $pluralModelLabel = 'testimonial';
+    protected static ?string $pluralModelLabel = 'testimoni';
+
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
     {

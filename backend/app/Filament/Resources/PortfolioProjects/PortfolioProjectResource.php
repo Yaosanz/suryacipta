@@ -20,7 +20,7 @@ class PortfolioProjectResource extends Resource
 {
     protected static ?string $model = PortfolioProject::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Konten';
 
@@ -31,6 +31,8 @@ class PortfolioProjectResource extends Resource
     protected static ?string $modelLabel = 'proyek';
 
     protected static ?string $pluralModelLabel = 'portofolio';
+
+    protected static ?string $recordTitleAttribute = 'title';
 
     public static function form(Schema $schema): Schema
     {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\InquiryStatus;
 use App\Enums\PublicationStatus;
 use App\Filament\Resources\BlogPosts\BlogPostResource;
 use App\Filament\Resources\Inquiries\InquiryResource;
@@ -26,7 +27,7 @@ class CmsOverview extends StatsOverviewWidget
         ];
 
         if (auth()->user()->role->canViewInquiries()) {
-            $stats[] = Stat::make('Permintaan baru', Inquiry::query()->where('status', 'new')->count())
+            $stats[] = Stat::make('Permintaan baru', Inquiry::query()->where('status', InquiryStatus::New)->count())
                 ->url(InquiryResource::getUrl())
                 ->color('warning');
         }

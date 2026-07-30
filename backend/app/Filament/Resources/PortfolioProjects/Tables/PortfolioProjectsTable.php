@@ -19,30 +19,41 @@ class PortfolioProjectsTable
     {
         return $table
             ->columns([
-                TextColumn::make('slug')
-                    ->searchable(),
                 TextColumn::make('title')
+                    ->label('Nama proyek')
                     ->searchable(),
                 TextColumn::make('client_name')
+                    ->label('Klien')
+                    ->placeholder('Dirahasiakan')
                     ->searchable(),
                 TextColumn::make('location')
+                    ->label('Lokasi')
                     ->searchable(),
                 TextColumn::make('category')
+                    ->label('Kategori')
+                    ->badge()
                     ->searchable(),
                 TextColumn::make('year')
+                    ->label('Tahun')
                     ->numeric()
                     ->sortable(),
-                ImageColumn::make('image_path'),
-                ImageColumn::make('image_alt'),
+                ImageColumn::make('image_path')
+                    ->label('Foto')
+                    ->disk('public'),
                 TextColumn::make('sort_order')
+                    ->label('Urutan')
                     ->numeric()
                     ->sortable(),
                 IconColumn::make('is_featured')
+                    ->label('Unggulan')
                     ->boolean(),
                 IconColumn::make('is_published')
+                    ->label('Tampil')
                     ->boolean(),
                 TextColumn::make('published_at')
-                    ->dateTime()
+                    ->label('Waktu terbit')
+                    ->dateTime('d M Y H:i')
+                    ->placeholder('Belum terbit')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -69,6 +80,9 @@ class PortfolioProjectsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada portofolio')
+            ->emptyStateDescription('Tambahkan proyek yang sudah selesai untuk membangun kepercayaan calon pelanggan.')
+            ->defaultSort('sort_order');
     }
 }

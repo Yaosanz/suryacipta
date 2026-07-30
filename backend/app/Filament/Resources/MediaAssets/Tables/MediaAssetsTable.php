@@ -19,16 +19,22 @@ class MediaAssetsTable
         return $table
             ->columns([
                 ImageColumn::make('file_path')->label('Pratinjau')->disk('public'),
-                TextColumn::make('original_name')
-                    ->label('Nama berkas')
+                TextColumn::make('alt_text')
+                    ->label('Deskripsi gambar')
+                    ->limit(60)
                     ->searchable(),
                 TextColumn::make('mime_type')
-                    ->searchable(),
+                    ->label('Format')
+                    ->formatStateUsing(fn (string $state): string => strtoupper(str_replace('image/', '', $state)))
+                    ->badge(),
                 TextColumn::make('size')
+                    ->label('Ukuran')
                     ->formatStateUsing(fn (int $state): string => number_format($state / 1024, 1).' KB')
                     ->sortable(),
-                TextColumn::make('alt_text')
-                    ->searchable(),
+                TextColumn::make('original_name')
+                    ->label('Nama penyimpanan')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -54,6 +60,9 @@ class MediaAssetsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Pustaka media masih kosong')
+            ->emptyStateDescription('Unggah gambar yang siap digunakan pada konten website.')
+            ->defaultSort('created_at', 'desc');
     }
 }

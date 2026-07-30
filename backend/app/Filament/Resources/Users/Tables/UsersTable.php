@@ -16,9 +16,11 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label('Nama')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('Email')
+                    ->copyable()
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -29,10 +31,12 @@ class UsersTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('role')
+                    ->label('Peran')
                     ->badge()
                     ->formatStateUsing(fn ($state): string => $state->label())
                     ->searchable(),
                 IconColumn::make('is_active')
+                    ->label('Aktif')
                     ->boolean(),
                 TextColumn::make('last_login_at')
                     ->dateTime('d M Y H:i')
@@ -49,6 +53,8 @@ class UsersTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada pengguna CMS')
+            ->emptyStateDescription('Tambahkan pengguna dan berikan peran sesuai tanggung jawabnya.');
     }
 }

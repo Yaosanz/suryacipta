@@ -14,17 +14,17 @@ class ActivityResource extends Resource
 {
     protected static ?string $model = Activity::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Sistem';
 
-    protected static ?string $navigationLabel = 'Audit Aktivitas';
+    protected static ?string $navigationLabel = 'Riwayat Aktivitas';
 
     protected static ?int $navigationSort = 30;
 
     protected static ?string $modelLabel = 'aktivitas';
 
-    protected static ?string $pluralModelLabel = 'audit aktivitas';
+    protected static ?string $pluralModelLabel = 'riwayat aktivitas';
 
     public static function table(Table $table): Table
     {

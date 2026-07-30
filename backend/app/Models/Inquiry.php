@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InquiryStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -30,6 +31,11 @@ class Inquiry extends Model
         'source',
         'ip_hash',
     ];
+
+    protected function casts(): array
+    {
+        return ['status' => InquiryStatus::class];
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

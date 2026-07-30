@@ -3,13 +3,16 @@
 namespace App\Filament\Resources\BlogPosts\Schemas;
 
 use App\Enums\PublicationStatus;
+use App\Filament\Forms\CmsImageUpload;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 
 class BlogPostForm
 {
@@ -17,35 +20,87 @@ class BlogPostForm
     {
         return $schema
             ->components([
-                TextInput::make('slug')
-                    ->required()->unique(ignoreRecord: true)->alphaDash()->maxLength(160),
-                TextInput::make('title')
-                    ->required()->maxLength(180),
-                Textarea::make('excerpt')
-                    ->required()->maxLength(500)->rows(3)
+                Section::make('Isi artikel')
+                    ->description('Tulis judul yang jelas, ringkasan singkat, lalu isi artikel secara lengkap.')
+                    ->schema([
+                        TextInput::make('title')
+                            ->label('Judul artikel')
+                            ->placeholder('Contoh: Cara Memilih Panel GRC untuk Fasad')
+                            ->required()
+                            ->maxLength(180)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (?string $state, Set $set, string $operation): void {
+                                if ($operation === 'create') {
+                                    $set('slug', Str::slug($state ?? ''));
+                                }
+                            }),
+                        TextInput::make('slug')
+                            ->label('Alamat URL')
+                            ->placeholder('cara-memilih-panel-grc')
+                            ->helperText('Dibuat otomatis dari judul. Hindari mengubahnya setelah artikel diterbitkan.')
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->alphaDash()
+                            ->maxLength(160),
+                        Textarea::make('excerpt')
+                            ->label('Ringkasan artikel')
+                            ->placeholder('Tuliskan inti artikel dalam 1-2 kalimat.')
+                            ->required()
+                            ->maxLength(500)
+                            ->rows(3)
+                            ->columnSpanFull(),
+                        MarkdownEditor::make('content')
+                            ->label('Isi artikel')
+                            ->helperText('Gunakan heading untuk membagi pembahasan agar mudah dibaca.')
+                            ->required()
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2)
                     ->columnSpanFull(),
-                MarkdownEditor::make('content')
-                    ->required()
+                Section::make('Gambar utama')
+                    ->schema([
+                        CmsImageUpload::make('featured_image_path', 'Foto artikel', 'cms/blog'),
+                        TextInput::make('featured_image_alt')
+                            ->label('Deskripsi gambar')
+                            ->placeholder('Contoh: Pemasangan panel GRC pada fasad bangunan')
+                            ->maxLength(180),
+                    ])
+                    ->columns(2)
                     ->columnSpanFull(),
-                FileUpload::make('featured_image_path')
-                    ->label('Gambar utama')
-                    ->disk('public')->directory('cms/blog')->visibility('public')
-                    ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                    ->maxSize(5120)->imageEditor()->orientImagesFromExif()
-                    ->preventFilePathTampering(),
-                TextInput::make('featured_image_alt')
-                    ->label('Teks alternatif gambar')->maxLength(180),
-                Select::make('author_id')
-                    ->relationship('author', 'name'),
-                Select::make('status')
-                    ->options(PublicationStatus::class)
-                    ->default('draft')
-                    ->required()
-                    ->disabled(fn (): bool => ! auth()->user()->role->canPublish()),
-                DateTimePicker::make('published_at'),
-                TextInput::make('seo_title')->maxLength(60),
-                Textarea::make('seo_description')
-                    ->maxLength(160)->rows(3)
+                Section::make('Penulis dan publikasi')
+                    ->schema([
+                        Select::make('author_id')
+                            ->label('Penulis')
+                            ->relationship('author', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Gunakan pengguna yang sedang login'),
+                        Select::make('status')
+                            ->label('Status artikel')
+                            ->options(PublicationStatus::class)
+                            ->default(PublicationStatus::Draft)
+                            ->required()
+                            ->disabled(fn (): bool => ! (auth()->user()?->role->canPublish() ?? false)),
+                        DateTimePicker::make('published_at')
+                            ->label('Jadwal terbit')
+                            ->helperText('Kosongkan untuk menerbitkan saat status diubah menjadi “Sudah terbit”.'),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
+                Section::make('Optimasi mesin pencari')
+                    ->description('Opsional. Kosongkan untuk menggunakan judul dan ringkasan artikel.')
+                    ->schema([
+                        TextInput::make('seo_title')
+                            ->label('Judul SEO')
+                            ->maxLength(60)
+                            ->columnSpanFull(),
+                        Textarea::make('seo_description')
+                            ->label('Deskripsi SEO')
+                            ->maxLength(160)
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsed()
                     ->columnSpanFull(),
             ]);
     }

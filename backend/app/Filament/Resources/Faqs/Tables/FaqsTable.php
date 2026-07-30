@@ -19,12 +19,19 @@ class FaqsTable
         return $table
             ->columns([
                 TextColumn::make('category')
+                    ->label('Kategori')
+                    ->badge()
+                    ->placeholder('Umum')
                     ->searchable(),
                 TextColumn::make('question')
+                    ->label('Pertanyaan')
+                    ->limit(80)
                     ->searchable(),
                 IconColumn::make('is_published')
+                    ->label('Tampil')
                     ->boolean(),
                 TextColumn::make('sort_order')
+                    ->label('Urutan')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -52,6 +59,9 @@ class FaqsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada pertanyaan umum')
+            ->emptyStateDescription('Tambahkan jawaban untuk pertanyaan yang sering diajukan calon pelanggan.')
+            ->defaultSort('sort_order');
     }
 }

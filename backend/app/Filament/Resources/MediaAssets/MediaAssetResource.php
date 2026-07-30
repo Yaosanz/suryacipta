@@ -20,7 +20,7 @@ class MediaAssetResource extends Resource
 {
     protected static ?string $model = MediaAsset::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Media';
 
@@ -31,6 +31,8 @@ class MediaAssetResource extends Resource
     protected static ?string $modelLabel = 'media';
 
     protected static ?string $pluralModelLabel = 'media';
+
+    protected static ?string $recordTitleAttribute = 'alt_text';
 
     public static function form(Schema $schema): Schema
     {
