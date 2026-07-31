@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:visual": "node scripts/visual-check.mjs",
+    "test:visual-cms": "node scripts/cms-visual-check.mjs",
     "test:e2e-contact": "node scripts/e2e-contact.mjs"
   },
   "dependencies": {

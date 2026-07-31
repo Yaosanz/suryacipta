@@ -1,10 +1,8 @@
-import { COMPANY } from "@/lib/constants";
-
 /** Angka kepercayaan utama perusahaan. */
 export default function StatsSection({
-  stats = [...COMPANY.stats],
+  stats,
 }: {
-  stats?: Array<{ value: string; label: string }>;
+  stats: Array<{ value: string; label: string }>;
 }) {
   return (
     <section id="statistik" className="bg-navy text-white" aria-label="Statistik perusahaan">

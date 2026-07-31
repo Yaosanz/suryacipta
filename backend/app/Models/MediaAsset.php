@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsDetailedActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
@@ -10,11 +11,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class MediaAsset extends Model
 {
-    use LogsActivity, SoftDeletes;
+    use LogsActivity, RecordsDetailedActivity, SoftDeletes;
 
     protected $fillable = [
         'disk', 'file_path', 'original_name', 'mime_type', 'size',
-        'alt_text', 'caption', 'uploaded_by',
+        'width', 'height', 'duration', 'alt_text', 'caption', 'uploaded_by',
     ];
 
     protected static function booted(): void
@@ -25,7 +26,12 @@ class MediaAsset extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->useLogName('media')
-            ->logOnly(['file_path', 'original_name', 'mime_type', 'size', 'alt_text', 'caption'])
+            ->logOnly(['file_path', 'original_name', 'mime_type', 'size', 'width', 'height', 'duration', 'alt_text', 'caption'])
             ->logOnlyDirty();
+    }
+
+    protected function casts(): array
+    {
+        return ['duration' => 'float'];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MediaAssets;
 use App\Filament\Resources\MediaAssets\Pages\CreateMediaAsset;
 use App\Filament\Resources\MediaAssets\Pages\EditMediaAsset;
 use App\Filament\Resources\MediaAssets\Pages\ListMediaAssets;
+use App\Filament\Resources\MediaAssets\Pages\ViewMediaAsset;
 use App\Filament\Resources\MediaAssets\Schemas\MediaAssetForm;
 use App\Filament\Resources\MediaAssets\Tables\MediaAssetsTable;
 use App\Models\MediaAsset;
@@ -56,6 +57,7 @@ class MediaAssetResource extends Resource
         return [
             'index' => ListMediaAssets::route('/'),
             'create' => CreateMediaAsset::route('/create'),
+            'view' => ViewMediaAsset::route('/{record}'),
             'edit' => EditMediaAsset::route('/{record}/edit'),
         ];
     }

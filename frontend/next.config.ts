@@ -12,18 +12,24 @@ function getOrigin(url: string): string {
 
 const apiOrigin = getOrigin(apiUrl);
 const isProduction = process.env.NODE_ENV === "production";
+const scriptSources = [
+  "'self'",
+  "'unsafe-inline'",
+  ...(!isProduction ? ["'unsafe-eval'"] : []),
+  "https://www.googletagmanager.com",
+].join(" ");
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  `script-src ${scriptSources}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  `img-src 'self' data: ${apiOrigin} https://images.unsplash.com https://*.google.com https://*.gstatic.com`,
+  `img-src 'self' data: ${apiOrigin} https://*.google.com https://*.gstatic.com`,
+  "frame-src 'self' https://www.google.com https://maps.google.com",
   `connect-src 'self' ${apiOrigin} https://www.google-analytics.com https://*.google-analytics.com`,
-  "frame-src https://www.google.com https://maps.google.com",
   "media-src 'self'",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
@@ -51,9 +57,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  allowedDevOrigins: ["127.0.0.1"],
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
       new URL(`${apiOrigin}/storage/**`),
     ],
     formats: ["image/avif", "image/webp"],

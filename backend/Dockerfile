@@ -39,6 +39,13 @@ RUN composer dump-autoload \
     --no-scripts \
     && APP_ENV=production APP_DEBUG=false LOG_CHANNEL=stderr php artisan package:discover --ansi
 
+FROM node:24-alpine AS assets
+WORKDIR /app
+
+COPY --from=vendor /app /app
+RUN npm ci --ignore-scripts --no-audit --no-fund \
+    && npm run build
+
 FROM php-base AS runtime
 WORKDIR /var/www/html
 
@@ -61,6 +68,7 @@ RUN a2ensite suryacipta \
     && a2enconf suryacipta-hardening
 
 COPY --from=vendor /app /var/www/html
+COPY --from=assets /app/public/build /var/www/html/public/build
 COPY docker/entrypoint.sh /usr/local/bin/suryacipta-entrypoint
 
 RUN mkdir -p \

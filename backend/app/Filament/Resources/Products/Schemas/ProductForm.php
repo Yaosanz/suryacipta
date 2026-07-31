@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Filament\Forms\CmsImageUpload;
+use App\Filament\Forms\CmsMediaPreview;
+use App\Filament\Forms\CmsVideoUpload;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
@@ -67,14 +69,22 @@ class ProductForm
                     ])
                     ->columns(2)
                     ->columnSpanFull(),
-                Section::make('Gambar produk')
-                    ->description('Gunakan foto produk yang jelas dan tambahkan deskripsi gambar untuk aksesibilitas.')
+                Section::make('Media produk')
+                    ->description('Gunakan foto sebagai poster utama. Video bersifat opsional dan ditampilkan pada halaman detail produk.')
                     ->schema([
                         CmsImageUpload::make('image_path', 'Foto produk', 'cms/products'),
+                        CmsMediaPreview::make('image_path', altField: 'image_alt'),
                         TextInput::make('image_alt')
                             ->label('Deskripsi gambar')
                             ->placeholder('Contoh: Panel GRC putih terpasang pada fasad gedung')
                             ->helperText('Jelaskan isi gambar, bukan nama file.')
+                            ->maxLength(180),
+                        CmsVideoUpload::make('video_path', 'Video produk', 'cms/products/videos'),
+                        CmsMediaPreview::make('video_path', 'video', 'video_alt'),
+                        TextInput::make('video_alt')
+                            ->label('Deskripsi video')
+                            ->placeholder('Contoh: Demonstrasi pemasangan panel GRC pada fasad')
+                            ->helperText('Jelaskan isi video untuk aksesibilitas.')
                             ->maxLength(180),
                     ])
                     ->columns(2)

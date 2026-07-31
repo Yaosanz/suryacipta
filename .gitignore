@@ -11,6 +11,8 @@
 /backend/database/database.sqlite
 /backend/database/*.sql
 /backend/database/*.dump
+/backend/storage/framework/qa-tmp/
+/backend/package-lock.json
 /frontend/.env.local
 /frontend/node_modules/
 /frontend/.next/
@@ -28,3 +30,5 @@ secrets.*
 /visual-*.png
 /desktop-home.png
 /mobile-home.png
+nul
+*.tmp

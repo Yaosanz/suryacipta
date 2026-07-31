@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\Testimonials\Pages;
 
 use App\Filament\Resources\Testimonials\TestimonialResource;
+use App\Filament\Support\Pages\EditCmsRecord;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
-use Filament\Resources\Pages\EditRecord;
 
-class EditTestimonial extends EditRecord
+class EditTestimonial extends EditCmsRecord
 {
     protected static string $resource = TestimonialResource::class;
 

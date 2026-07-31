@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Users\Schemas;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Rules\ValidCmsImage;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -20,6 +22,23 @@ class UserForm
             ->components([
                 Section::make('Identitas pengguna')
                     ->schema([
+                        FileUpload::make('avatar_path')
+                            ->label('Foto profil')
+                            ->avatar()
+                            ->image()
+                            ->disk('public')
+                            ->directory('cms/avatars')
+                            ->visibility('public')
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->rules([new ValidCmsImage(600, 600, 1, '1:1')])
+                            ->maxSize(2048)
+                            ->imagePreviewHeight('200')
+                            ->panelLayout('integrated')
+                            ->imageEditor()
+                            ->openable()
+                            ->downloadable()
+                            ->helperText('Rasio 1:1, ideal 800 x 800 piksel. Maksimal 2 MB.')
+                            ->columnSpanFull(),
                         TextInput::make('name')
                             ->label('Nama lengkap')
                             ->placeholder('Nama pengguna CMS')

@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\BlogPosts;
 
+use App\Enums\PublicationStatus;
 use App\Filament\Resources\BlogPosts\Pages\CreateBlogPost;
 use App\Filament\Resources\BlogPosts\Pages\EditBlogPost;
 use App\Filament\Resources\BlogPosts\Pages\ListBlogPosts;
+use App\Filament\Resources\BlogPosts\Pages\ViewBlogPost;
 use App\Filament\Resources\BlogPosts\Schemas\BlogPostForm;
 use App\Filament\Resources\BlogPosts\Tables\BlogPostsTable;
 use App\Models\BlogPost;
@@ -34,6 +36,23 @@ class BlogPostResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = BlogPost::query()->where('status', PublicationStatus::Draft)->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Artikel yang masih berupa draf';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return BlogPostForm::configure($schema);
@@ -56,6 +75,7 @@ class BlogPostResource extends Resource
         return [
             'index' => ListBlogPosts::route('/'),
             'create' => CreateBlogPost::route('/create'),
+            'view' => ViewBlogPost::route('/{record}'),
             'edit' => EditBlogPost::route('/{record}/edit'),
         ];
     }

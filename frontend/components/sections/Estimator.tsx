@@ -2,25 +2,34 @@
 
 import { useMemo, useState } from "react";
 import { Calculator } from "lucide-react";
+import type { CmsSection } from "@/lib/cms";
 
 /** Kalkulator indikatif kebutuhan panel, bukan harga atau hasil engineering final. */
-export default function Estimator() {
-  const [area, setArea] = useState(20);
-  const [panelArea, setPanelArea] = useState(1.2);
-  const estimate = useMemo(() => Math.ceil((area * 1.05) / Math.max(panelArea, 0.1)), [area, panelArea]);
+export default function Estimator({
+  config,
+}: {
+  config: NonNullable<CmsSection["content"]["estimator"]>;
+}) {
+  const allowance = Math.max(0, Math.min(30, Number(config.allowancePercent ?? 0)));
+  const [area, setArea] = useState(Number(config.defaultArea ?? 1));
+  const [panelArea, setPanelArea] = useState(Number(config.defaultPanelArea ?? 1));
+  const estimate = useMemo(
+    () => Math.ceil((area * (1 + allowance / 100)) / Math.max(panelArea, 0.1)),
+    [allowance, area, panelArea],
+  );
 
   return (
     <section className="bg-navy p-6 text-white md:p-8" aria-labelledby="estimator-title">
       <Calculator className="text-gold" aria-hidden="true" />
       <h2 id="estimator-title" className="mt-4 font-display text-2xl font-bold">
-        Kalkulator kebutuhan panel
+        {config.title}
       </h2>
       <p className="mt-2 text-sm leading-6 text-white/70">
-        Estimasi jumlah panel termasuk allowance 5%. Verifikasi lapangan tetap diperlukan.
+        {config.description}
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <label className="text-sm font-bold">
-          Luas area (m2)
+          {config.areaLabel}
           <input
             className="field mt-2 text-ink"
             type="number"
@@ -31,7 +40,7 @@ export default function Estimator() {
           />
         </label>
         <label className="text-sm font-bold">
-          Luas per panel (m2)
+          {config.panelAreaLabel}
           <input
             className="field mt-2 text-ink"
             type="number"
@@ -44,7 +53,8 @@ export default function Estimator() {
         </label>
       </div>
       <p className="mt-6 border-t border-white/20 pt-5 text-sm">
-        Estimasi kebutuhan: <strong className="ml-2 font-display text-3xl text-gold">{estimate} panel</strong>
+        {config.resultLabel}:{" "}
+        <strong className="ml-2 font-display text-3xl text-gold">{estimate} panel</strong>
       </p>
     </section>
   );

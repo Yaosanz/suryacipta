@@ -17,9 +17,14 @@ use App\Policies\PageSectionPolicy;
 use App\Policies\PortfolioProjectPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\SiteSettingPolicy;
+use App\Policies\TeamMemberPolicy;
 use App\Policies\TestimonialPolicy;
 use App\Policies\UserPolicy;
+use App\Support\ActivityPresenter;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class CmsAuthorizationTest extends TestCase
@@ -29,9 +34,12 @@ class CmsAuthorizationTest extends TestCase
     public function test_panel_requires_authentication_and_password_reset_is_opt_in(): void
     {
         $this->get('/admin')->assertRedirect('/admin/login');
-        $this->get('/admin/login')->assertOk()
+        $login = $this->get('/admin/login')->assertOk()
             ->assertHeader('X-Frame-Options', 'DENY')
             ->assertHeader('X-Content-Type-Options', 'nosniff');
+        $csp = (string) $login->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("media-src 'self' blob:", $csp);
+        $this->assertStringContainsString("worker-src 'self' blob:", $csp);
         $this->get('/admin/password-reset/request')->assertNotFound();
     }
 
@@ -76,6 +84,52 @@ class CmsAuthorizationTest extends TestCase
         $this->assertFalse((new BlogPostPolicy)->update($editor, $post));
     }
 
+    public function test_view_pages_follow_record_policies(): void
+    {
+        $editor = User::factory()->create(['role' => UserRole::Editor]);
+        $manager = User::factory()->create(['role' => UserRole::ContentManager]);
+        $admin = User::factory()->create(['role' => UserRole::SuperAdmin]);
+
+        foreach ([$editor, $manager, $admin] as $user) {
+            $user->app_authentication_secret = 'local-test-secret';
+            $user->save();
+        }
+
+        $product = Product::query()->create([
+            'slug' => 'read-only-product',
+            'name' => 'Read-only Product',
+            'category' => 'GRC',
+            'short_description' => 'Detail content',
+            'is_published' => true,
+        ]);
+        $inquiry = Inquiry::query()->create([
+            'name' => 'Prospect',
+            'email' => 'prospect@example.com',
+            'phone' => '081234567890',
+            'project_type' => 'Fasad',
+            'message' => 'Project details',
+            'status' => 'new',
+        ]);
+
+        $this->actingAs($editor)
+            ->get("/admin/products/{$product->getKey()}")
+            ->assertOk();
+        $this->get("/admin/products/{$product->getKey()}/edit")
+            ->assertForbidden();
+        $this->get("/admin/inquiries/{$inquiry->getKey()}")
+            ->assertForbidden();
+
+        $this->actingAs($manager)
+            ->get("/admin/inquiries/{$inquiry->getKey()}")
+            ->assertOk();
+        $this->get("/admin/users/{$editor->getKey()}")
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->get("/admin/users/{$editor->getKey()}")
+            ->assertOk();
+    }
+
     public function test_all_cms_policies_define_every_ability_required_by_strict_authorization(): void
     {
         $abilities = [
@@ -103,6 +157,7 @@ class CmsAuthorizationTest extends TestCase
             ProductPolicy::class,
             SiteSettingPolicy::class,
             TestimonialPolicy::class,
+            TeamMemberPolicy::class,
             UserPolicy::class,
         ];
 
@@ -127,6 +182,9 @@ class CmsAuthorizationTest extends TestCase
 
         $this->actingAs($admin);
 
+        $this->get('/admin')->assertOk();
+        $this->get('/admin/profile')->assertOk();
+
         foreach ([
             '/admin/activities',
             '/admin/blog-posts',
@@ -138,6 +196,7 @@ class CmsAuthorizationTest extends TestCase
             '/admin/products',
             '/admin/site-settings',
             '/admin/testimonials',
+            '/admin/team-members',
             '/admin/users',
         ] as $path) {
             $this->get($path)->assertOk();
@@ -152,6 +211,7 @@ class CmsAuthorizationTest extends TestCase
             '/admin/products/create',
             '/admin/site-settings/create',
             '/admin/testimonials/create',
+            '/admin/team-members/create',
             '/admin/users/create',
         ] as $path) {
             $this->get($path)->assertOk();
@@ -178,5 +238,97 @@ class CmsAuthorizationTest extends TestCase
         $changes = $activity->attribute_changes->get('attributes', []);
         $this->assertArrayNotHasKey('message', $changes);
         $this->assertSame('contacted', $changes['status']);
+    }
+
+    public function test_inquiry_handling_records_the_responsible_user(): void
+    {
+        $manager = User::factory()->create(['role' => UserRole::ContentManager]);
+        $inquiry = Inquiry::query()->create([
+            'name' => 'Customer',
+            'email' => 'customer@example.com',
+            'phone' => '081234567890',
+            'project_type' => 'Fasad',
+            'message' => 'Project details',
+            'status' => 'new',
+        ]);
+
+        $this->actingAs($manager);
+        $inquiry->update(['status' => 'contacted']);
+
+        $this->assertTrue($inquiry->handledBy->is($manager));
+        $this->assertNotNull($inquiry->handled_at);
+    }
+
+    public function test_user_avatar_uses_local_initials_and_public_uploads(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create([
+            'name' => 'Sandy Admin',
+            'avatar_path' => null,
+        ]);
+
+        $fallback = $user->getFilamentAvatarUrl();
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', $fallback);
+        $this->assertStringContainsString('SA', base64_decode(str($fallback)->after(',')->toString()));
+
+        Storage::disk('public')->put('cms/avatars/admin.webp', 'image-bytes');
+        $user->update(['avatar_path' => 'cms/avatars/admin.webp']);
+
+        $this->assertStringContainsString('/storage/cms/avatars/admin.webp', $user->getFilamentAvatarUrl());
+    }
+
+    public function test_activity_log_records_actor_context_and_readable_field_changes(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Audit Admin',
+            'email' => 'audit@example.test',
+            'role' => UserRole::SuperAdmin,
+        ]);
+        $product = Product::query()->create([
+            'slug' => 'audit-product',
+            'name' => 'Before Update',
+            'category' => 'GRC',
+            'short_description' => 'Audit test.',
+            'is_published' => false,
+        ]);
+
+        $this->actingAs($admin);
+        $product->update([
+            'name' => 'After Update',
+            'is_published' => true,
+        ]);
+
+        $activity = $product->activitiesAsSubject()->where('event', 'updated')->latest()->firstOrFail();
+        $changes = collect(ActivityPresenter::changes($activity))->keyBy('field');
+
+        $this->assertTrue($activity->causer->is($admin));
+        $this->assertSame('audit@example.test', $activity->properties->get('actor_email'));
+        $this->assertSame('super_admin', $activity->properties->get('actor_role'));
+        $this->assertSame('After Update', $activity->properties->get('subject_label'));
+        $this->assertSame('Before Update', $changes->get('Name')['old']);
+        $this->assertSame('After Update', $changes->get('Name')['new']);
+        $this->assertSame('Tidak', $changes->get('Status tayang')['old']);
+        $this->assertSame('Ya', $changes->get('Status tayang')['new']);
+    }
+
+    public function test_login_event_is_recorded_with_user_and_exact_timestamp(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'login-audit@example.test',
+            'role' => UserRole::SuperAdmin,
+        ]);
+
+        event(new Login('web', $admin, false));
+
+        $activity = Activity::query()
+            ->where('log_name', 'authentication')
+            ->where('event', 'login')
+            ->latest()
+            ->firstOrFail();
+
+        $this->assertTrue($activity->causer->is($admin));
+        $this->assertSame('login-audit@example.test', $activity->properties->get('actor_email'));
+        $this->assertNotNull($activity->properties->get('occurred_at'));
+        $this->assertNotNull($activity->created_at);
     }
 }

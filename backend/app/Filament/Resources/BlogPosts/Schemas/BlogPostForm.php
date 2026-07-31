@@ -4,6 +4,8 @@ namespace App\Filament\Resources\BlogPosts\Schemas;
 
 use App\Enums\PublicationStatus;
 use App\Filament\Forms\CmsImageUpload;
+use App\Filament\Forms\CmsMediaPreview;
+use App\Filament\Forms\CmsVideoUpload;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
@@ -57,12 +59,28 @@ class BlogPostForm
                     ])
                     ->columns(2)
                     ->columnSpanFull(),
-                Section::make('Gambar utama')
+                Section::make('Media utama')
                     ->schema([
-                        CmsImageUpload::make('featured_image_path', 'Foto artikel', 'cms/blog'),
+                        CmsImageUpload::make(
+                            'featured_image_path',
+                            'Foto artikel',
+                            'cms/blog',
+                            aspectRatio: '16:9',
+                            recommendedSize: '1600 x 900',
+                            minWidth: 1280,
+                            minHeight: 720,
+                            validationRatio: 16 / 9,
+                        ),
+                        CmsMediaPreview::make('featured_image_path', altField: 'featured_image_alt'),
                         TextInput::make('featured_image_alt')
                             ->label('Deskripsi gambar')
                             ->placeholder('Contoh: Pemasangan panel GRC pada fasad bangunan')
+                            ->maxLength(180),
+                        CmsVideoUpload::make('video_path', 'Video artikel', 'cms/blog/videos'),
+                        CmsMediaPreview::make('video_path', 'video', 'video_alt'),
+                        TextInput::make('video_alt')
+                            ->label('Deskripsi video')
+                            ->placeholder('Contoh: Penjelasan tahapan pemasangan panel GRC')
                             ->maxLength(180),
                     ])
                     ->columns(2)

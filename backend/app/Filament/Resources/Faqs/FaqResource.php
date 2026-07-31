@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Faqs;
 use App\Filament\Resources\Faqs\Pages\CreateFaq;
 use App\Filament\Resources\Faqs\Pages\EditFaq;
 use App\Filament\Resources\Faqs\Pages\ListFaqs;
+use App\Filament\Resources\Faqs\Pages\ViewFaq;
 use App\Filament\Resources\Faqs\Schemas\FaqForm;
 use App\Filament\Resources\Faqs\Tables\FaqsTable;
 use App\Models\Faq;
@@ -56,6 +57,7 @@ class FaqResource extends Resource
         return [
             'index' => ListFaqs::route('/'),
             'create' => CreateFaq::route('/create'),
+            'view' => ViewFaq::route('/{record}'),
             'edit' => EditFaq::route('/{record}/edit'),
         ];
     }

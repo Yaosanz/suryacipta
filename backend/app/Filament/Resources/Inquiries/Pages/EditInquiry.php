@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\Inquiries\Pages;
 
 use App\Filament\Resources\Inquiries\InquiryResource;
+use App\Filament\Support\Pages\EditCmsRecord;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 
-class EditInquiry extends EditRecord
+class EditInquiry extends EditCmsRecord
 {
     protected static string $resource = InquiryResource::class;
 

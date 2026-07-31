@@ -1,10 +1,8 @@
-import { FAQS } from "@/lib/constants";
-
 /** Daftar FAQ native yang tetap berfungsi tanpa JavaScript. */
 export default function FaqList({
-  items = [...FAQS],
+  items,
 }: {
-  items?: Array<{ question: string; answer: string }>;
+  items: Array<{ question: string; answer: string }>;
 }) {
   return (
     <div className="divide-y divide-line border-y border-line">

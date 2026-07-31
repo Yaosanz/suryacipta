@@ -5,6 +5,7 @@ namespace App\Filament\Resources\SiteSettings;
 use App\Filament\Resources\SiteSettings\Pages\CreateSiteSetting;
 use App\Filament\Resources\SiteSettings\Pages\EditSiteSetting;
 use App\Filament\Resources\SiteSettings\Pages\ListSiteSettings;
+use App\Filament\Resources\SiteSettings\Pages\ViewSiteSetting;
 use App\Filament\Resources\SiteSettings\Schemas\SiteSettingForm;
 use App\Filament\Resources\SiteSettings\Tables\SiteSettingsTable;
 use App\Models\SiteSetting;
@@ -54,6 +55,7 @@ class SiteSettingResource extends Resource
         return [
             'index' => ListSiteSettings::route('/'),
             'create' => CreateSiteSetting::route('/create'),
+            'view' => ViewSiteSetting::route('/{record}'),
             'edit' => EditSiteSetting::route('/{record}/edit'),
         ];
     }

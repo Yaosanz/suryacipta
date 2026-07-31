@@ -6,8 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Clock3, LoaderCircle, Mail, MapPin, Phone, Send } from "lucide-react";
 import SectionHeader from "@/components/common/SectionHeader";
-import { COMPANY } from "@/lib/constants";
-import type { CmsHomeContent } from "@/lib/cms";
+import type { CmsHomeContent, CmsSection } from "@/lib/cms";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Nama minimal 2 karakter").max(100),
@@ -37,14 +36,23 @@ const contactSchema = z.object({
 type ContactFormData = z.infer<typeof contactSchema>;
 
 /** Form kontak tervalidasi yang mengirim ke Laravel API dan memiliki fallback WhatsApp. */
-export default function ContactSection({ site }: { site?: CmsHomeContent["site"] }) {
-  const whatsapp = site?.whatsapp ?? COMPANY.whatsapp;
-  const phone = site?.phone ?? COMPANY.phone;
-  const email = site?.email ?? COMPANY.email;
+export default function ContactSection({
+  site,
+  section,
+}: {
+  site: CmsHomeContent["site"];
+  section: CmsSection;
+}) {
+  const whatsapp = site.whatsapp;
+  const phone = site.phone;
+  const email = site.email;
   const address =
-    site?.address?.full ??
-    (site?.address ? Object.values(site.address).filter(Boolean).join(", ") : COMPANY.address.full);
-  const businessHours = site?.businessHours ?? COMPANY.hours;
+    site.address?.full ??
+    (site.address ? Object.values(site.address).filter(Boolean).join(", ") : "");
+  const businessHours = site.businessHours;
+  const mapUrl = section.content.mapUrl;
+  const projectTypes = section.content.projectTypes ?? [];
+  const budgetRanges = section.content.budgetRanges ?? [];
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const {
     register,
@@ -87,9 +95,9 @@ export default function ContactSection({ site }: { site?: CmsHomeContent["site"]
     <section id="kontak" className="section-space bg-paper">
       <div className="container-site">
         <SectionHeader
-          eyebrow="Kontak & RFQ"
-          title="Ceritakan kebutuhan proyek"
-          description="Data hanya digunakan untuk menanggapi permintaan Anda. Untuk estimasi lebih akurat, cantumkan lokasi, ukuran, dan target waktu."
+          eyebrow={section.eyebrow ?? ""}
+          title={section.title}
+          description={section.description ?? undefined}
         />
         <div className="mt-10 grid gap-10 lg:grid-cols-[1.15fr_.85fr]">
           <form
@@ -120,12 +128,7 @@ export default function ContactSection({ site }: { site?: CmsHomeContent["site"]
               Jenis proyek *
               <select className="field mt-2 font-normal text-ink" defaultValue="" {...register("projectType")}>
                 <option value="" disabled>Pilih jenis proyek</option>
-                <option>Masjid / Musholla</option>
-                <option>Hotel / Resort</option>
-                <option>Perumahan</option>
-                <option>Perkantoran / Komersial</option>
-                <option>Fasilitas Umum</option>
-                <option>Lainnya</option>
+                {projectTypes.map((type) => <option key={type.label}>{type.label}</option>)}
               </select>
               {errors.projectType && <span className="field-error block">{errors.projectType.message}</span>}
             </label>
@@ -137,10 +140,7 @@ export default function ContactSection({ site }: { site?: CmsHomeContent["site"]
               Rentang anggaran
               <select className="field mt-2 font-normal text-ink" defaultValue="" {...register("budgetRange")}>
                 <option value="">Belum ditentukan</option>
-                <option>Di bawah Rp50 juta</option>
-                <option>Rp50 - 150 juta</option>
-                <option>Rp150 - 500 juta</option>
-                <option>Di atas Rp500 juta</option>
+                {budgetRanges.map((range) => <option key={range.label}>{range.label}</option>)}
               </select>
             </label>
             <label className="text-sm font-bold text-navy md:col-span-2">
@@ -184,13 +184,13 @@ export default function ContactSection({ site }: { site?: CmsHomeContent["site"]
               )}
             </div>
           </form>
-          <aside className="bg-navy p-7 text-white md:p-9">
-            <h3 className="font-display text-3xl font-bold">Workshop Cibinong</h3>
-            <p className="mt-3 text-sm leading-6 text-white/70">
-              Jadwalkan survey atau pertemuan terlebih dahulu agar tim yang sesuai dapat mendampingi.
-            </p>
+          <aside className="overflow-hidden rounded-md bg-navy p-7 text-white shadow-[0_20px_45px_rgba(16,45,59,0.14)] md:p-9">
+            <h3 className="font-display text-3xl font-bold">{section.content.sidebarTitle}</h3>
+            {section.content.sidebarDescription && (
+              <p className="mt-3 text-sm leading-6 text-white/75">{section.content.sidebarDescription}</p>
+            )}
             <address className="mt-8 grid gap-6 not-italic">
-              <a href={COMPANY.address.googleMaps} target="_blank" rel="noreferrer" className="flex gap-4">
+              <a href={mapUrl} target="_blank" rel="noreferrer" className="flex gap-4 hover:text-gold-light">
                 <MapPin className="shrink-0 text-gold" aria-hidden="true" />
                 <span><strong className="block">Alamat</strong><span className="mt-1 block text-sm text-white/70">{address}</span></span>
               </a>
@@ -207,13 +207,15 @@ export default function ContactSection({ site }: { site?: CmsHomeContent["site"]
                 <span><strong className="block">Jam operasional</strong><span className="mt-1 block text-sm text-white/70">{businessHours}</span></span>
               </div>
             </address>
-            <iframe
-              className="mt-8 aspect-[4/3] w-full border-0"
-              src="https://www.google.com/maps?q=Jl.%20Raya%20Bogor%20Km%2040.5%20Cibinong%20Bogor&output=embed"
-              title="Peta lokasi workshop Surya Cipta Estetica"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            {mapUrl && (
+              <iframe
+                className="mt-8 aspect-[4/3] w-full rounded-sm border-0 bg-white"
+                src={mapUrl}
+                title={`Peta lokasi ${section.content.sidebarTitle ?? site.shortName}`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            )}
           </aside>
         </div>
       </div>

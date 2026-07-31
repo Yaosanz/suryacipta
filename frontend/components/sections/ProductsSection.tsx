@@ -5,13 +5,16 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import ProductCard from "@/components/common/ProductCard";
 import SectionHeader from "@/components/common/SectionHeader";
-import { PRODUCTS, type Product } from "@/lib/constants";
+import type { CmsSection } from "@/lib/cms";
+import type { Product } from "@/lib/cms-types";
 
 /** Katalog produk ringkas dengan filter tanpa request jaringan tambahan. */
 export default function ProductsSection({
-  products = [...PRODUCTS],
+  products,
+  section,
 }: {
-  products?: Product[];
+  products: Product[];
+  section: CmsSection;
 }) {
   const [active, setActive] = useState("Semua");
   const categories = useMemo(
@@ -27,9 +30,9 @@ export default function ProductsSection({
     <section className="section-space bg-white">
       <div className="container-site">
         <SectionHeader
-          eyebrow="Produk GRC"
-          title="Dibuat presisi untuk desain yang berbeda"
-          description="Pilih produk standar atau konsultasikan bentuk custom untuk kebutuhan arsitektur, kontraktor, dan pemilik bangunan."
+          eyebrow={section.eyebrow ?? ""}
+          title={section.title}
+          description={section.description ?? undefined}
         />
         <div className="mt-8 flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Filter produk">
           {categories.map((category) => (
@@ -49,16 +52,18 @@ export default function ProductsSection({
             </button>
           ))}
         </div>
-        <div className="mt-7 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-7 grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
-        <div className="mt-9 text-center">
-          <Link href="/produk" className="btn-secondary">
-            Lihat semua produk <ArrowRight size={17} aria-hidden="true" />
-          </Link>
-        </div>
+        {section.cta.url && section.cta.label && (
+          <div className="mt-9 text-center">
+            <Link href={section.cta.url} className="btn-secondary">
+              {section.cta.label} <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

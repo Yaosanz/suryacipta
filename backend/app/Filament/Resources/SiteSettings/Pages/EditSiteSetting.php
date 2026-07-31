@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\SiteSettings\Pages;
 
 use App\Filament\Resources\SiteSettings\SiteSettingResource;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Support\Pages\EditCmsRecord;
 
-class EditSiteSetting extends EditRecord
+class EditSiteSetting extends EditCmsRecord
 {
     protected static string $resource = SiteSettingResource::class;
 

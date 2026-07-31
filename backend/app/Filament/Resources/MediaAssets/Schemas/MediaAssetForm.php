@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\MediaAssets\Schemas;
 
-use App\Filament\Forms\CmsImageUpload;
+use App\Filament\Forms\CmsMediaPreview;
+use App\Filament\Forms\CmsMediaUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -16,13 +17,14 @@ class MediaAssetForm
         return $schema
             ->components([
                 Hidden::make('disk')->default('public'),
-                Section::make('Unggah gambar')
+                Section::make('Unggah media')
                     ->description('Simpan aset yang siap digunakan pada konten website.')
                     ->schema([
-                        CmsImageUpload::make('file_path', 'Berkas gambar', 'cms/media')
+                        CmsMediaUpload::make('file_path', 'Berkas gambar atau video', 'cms/media')
                             ->required(),
+                        CmsMediaPreview::make('file_path', altField: 'alt_text', mimeField: 'mime_type'),
                         TextInput::make('alt_text')
-                            ->label('Deskripsi gambar')
+                            ->label('Deskripsi media')
                             ->placeholder('Contoh: Ornamen GRC bermotif geometris warna putih')
                             ->helperText('Deskripsi singkat ini membantu aksesibilitas dan SEO.')
                             ->required()

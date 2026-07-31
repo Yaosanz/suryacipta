@@ -51,6 +51,11 @@ class InquiryForm
                             ->label('Status penanganan')
                             ->options(InquiryStatus::class)
                             ->required(),
+                        TextInput::make('handledBy.name')
+                            ->label('Ditangani oleh')
+                            ->placeholder('Belum ditangani')
+                            ->disabled()
+                            ->dehydrated(false),
                         TextInput::make('source')
                             ->label('Sumber')
                             ->disabled()

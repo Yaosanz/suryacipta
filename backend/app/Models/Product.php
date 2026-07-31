@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\ClearsCmsCache;
+use App\Models\Concerns\HasCmsVideo;
+use App\Models\Concerns\RecordsDetailedActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,12 +13,13 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Product extends Model
 {
-    use ClearsCmsCache, LogsActivity, SoftDeletes;
+    use ClearsCmsCache, HasCmsVideo, LogsActivity, RecordsDetailedActivity, SoftDeletes;
 
     protected $fillable = [
         'slug', 'name', 'category', 'short_description', 'description', 'features',
         'image_path', 'image_alt', 'sort_order', 'is_featured', 'is_published',
-        'published_at', 'seo_title', 'seo_description',
+        'published_at', 'seo_title', 'seo_description', 'video_path', 'video_alt',
+        'video_width', 'video_height', 'video_duration', 'video_size',
     ];
 
     protected function casts(): array
@@ -24,6 +27,7 @@ class Product extends Model
         return [
             'features' => 'array', 'is_featured' => 'boolean',
             'is_published' => 'boolean', 'published_at' => 'datetime',
+            'video_duration' => 'float',
         ];
     }
 

@@ -4,31 +4,44 @@ import ContactSection from "@/components/sections/ContactSection";
 import FaqList from "@/components/common/FaqList";
 import SectionHeader from "@/components/common/SectionHeader";
 import { createPageMetadata } from "@/lib/seo";
+import { findCmsSection, getCmsHomeContent } from "@/lib/cms";
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getCmsHomeContent();
+  const hero = findCmsSection(content, "contact", "hero");
   return createPageMetadata(
-    "Kontak & Permintaan Penawaran",
-    "Hubungi produsen GRC Bogor untuk konsultasi, survey, dan permintaan penawaran proyek.",
+    hero?.title ?? content.site.companyName,
+    hero?.description ?? content.site.description,
     "/kontak",
   );
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const content = await getCmsHomeContent();
+  const hero = findCmsSection(content, "contact", "hero");
+  const contact = findCmsSection(content, "contact", "contact");
+  const faq = findCmsSection(content, "contact", "faq");
+
   return (
     <>
-      <PageHero
-        eyebrow="Hubungi Tim Kami"
-        title="Konsultasi dan permintaan penawaran"
-        description="Sampaikan kebutuhan awal. Tim kami akan membantu menentukan informasi teknis yang perlu dilengkapi."
-        image="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=2000&q=85"
-      />
-      <ContactSection />
-      <section className="section-space bg-white">
-        <div className="container-site">
-          <SectionHeader eyebrow="Pertanyaan Umum" title="Informasi awal sebelum konsultasi" />
-          <div className="mt-7 max-w-4xl"><FaqList /></div>
-        </div>
-      </section>
+      {hero && (
+        <PageHero
+          eyebrow={hero.eyebrow}
+          title={hero.title}
+          description={hero.description}
+          image={hero.image}
+          imageAlt={hero.imageAlt}
+        />
+      )}
+      {contact && <ContactSection site={content.site} section={contact} />}
+      {faq && (
+        <section className="section-space bg-white">
+          <div className="container-site">
+            <SectionHeader eyebrow={faq.eyebrow ?? ""} title={faq.title} description={faq.description ?? undefined} />
+            <div className="mt-7 max-w-4xl"><FaqList items={content.faqs} /></div>
+          </div>
+        </section>
+      )}
     </>
   );
 }

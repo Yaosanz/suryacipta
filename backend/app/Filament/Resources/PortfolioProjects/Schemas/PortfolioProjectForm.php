@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\PortfolioProjects\Schemas;
 
 use App\Filament\Forms\CmsImageUpload;
+use App\Filament\Forms\CmsMediaPreview;
+use App\Filament\Forms\CmsVideoUpload;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -73,9 +75,16 @@ class PortfolioProjectForm
                 Section::make('Dokumentasi')
                     ->schema([
                         CmsImageUpload::make('image_path', 'Foto proyek', 'cms/portfolio'),
+                        CmsMediaPreview::make('image_path', altField: 'image_alt'),
                         TextInput::make('image_alt')
                             ->label('Deskripsi gambar')
                             ->placeholder('Contoh: Kubah GRC putih setelah pemasangan selesai')
+                            ->maxLength(180),
+                        CmsVideoUpload::make('video_path', 'Video proyek', 'cms/portfolio/videos'),
+                        CmsMediaPreview::make('video_path', 'video', 'video_alt'),
+                        TextInput::make('video_alt')
+                            ->label('Deskripsi video')
+                            ->placeholder('Contoh: Dokumentasi hasil pemasangan kubah dari sisi luar')
                             ->maxLength(180),
                     ])
                     ->columns(2)

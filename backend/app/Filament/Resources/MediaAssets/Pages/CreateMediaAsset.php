@@ -3,20 +3,19 @@
 namespace App\Filament\Resources\MediaAssets\Pages;
 
 use App\Filament\Resources\MediaAssets\MediaAssetResource;
-use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Facades\Storage;
+use App\Filament\Support\Pages\CreateCmsRecord;
+use App\Support\MediaAssetMetadata;
 
-class CreateMediaAsset extends CreateRecord
+class CreateMediaAsset extends CreateCmsRecord
 {
     protected static string $resource = MediaAssetResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $disk = Storage::disk('public');
-        $data['disk'] = 'public';
-        $data['original_name'] = basename($data['file_path']);
-        $data['mime_type'] = (string) $disk->mimeType($data['file_path']);
-        $data['size'] = $disk->size($data['file_path']);
+        $data = array_merge(
+            $data,
+            app(MediaAssetMetadata::class)->forPublicPath($data['file_path']),
+        );
         $data['uploaded_by'] = auth()->id();
 
         return $data;

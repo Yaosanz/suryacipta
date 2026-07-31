@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\SiteSettings\Schemas;
 
-use App\Filament\Forms\CmsImageUpload;
+use App\Filament\Forms\CmsLogoUpload;
+use App\Filament\Forms\CmsMediaPreview;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -38,7 +39,8 @@ class SiteSettingForm
                         ->required()
                         ->rows(5)
                         ->columnSpanFull(),
-                    CmsImageUpload::make('logo_path', 'Logo perusahaan', 'cms/branding', 2048),
+                    CmsLogoUpload::make('logo_path', 'Logo perusahaan', 'cms/branding'),
+                    CmsMediaPreview::make('logo_path', altField: 'logo_alt'),
                     TextInput::make('logo_alt')
                         ->label('Deskripsi logo')
                         ->placeholder('Logo CV. Surya Cipta Estetica Mandiri')

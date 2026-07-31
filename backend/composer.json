@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "filament/filament": "~5.0",
+        "james-heinrich/getid3": "1.9.24",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "spatie/laravel-activitylog": "^5.0"

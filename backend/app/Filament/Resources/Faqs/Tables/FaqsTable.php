@@ -7,8 +7,11 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -48,11 +51,16 @@ class FaqsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                TernaryFilter::make('is_published')
+                    ->label('Status tayang')
+                    ->trueLabel('Sudah tampil')
+                    ->falseLabel('Belum tampil'),
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
-            ])
+                ViewAction::make()->label('Lihat')->button()->outlined(),
+                EditAction::make()->label('Ubah')->button(),
+            ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
