@@ -3,7 +3,7 @@
 > **Versi Dokploy:** v2.x (terbaru)  
 > **Repository:** `github.com/<org>/suryacipta`  
 > **Branch Production:** `main`  
-> **Domain:** `suryaciptaestetika.co.id` (frontend), `api.suryaciptaestetika.co.id` (backend API)
+> **Domain:** Default domain Dokploy gratis (Traefik auto-generated)
 
 ---
 
@@ -12,9 +12,9 @@
 ### 1.1 Di Dokploy
 
 - Server sudah terdaftar di Dokploy dashboard.
-- Port `80`, `443` terbuka (Traefik handle SSL).
+- Port `80`, `443` terbuka (Traefik handle SSL otomatis).
 - Docker & Docker Compose sudah terinstall oleh Dokploy.
-- Domain sudah pointing A record ke IP server.
+- **Tidak perlu domain sendiri** — Dokploy menyediakan domain default gratis dengan SSL Let's Encrypt otomatis.
 
 ### 1.2 Di GitHub
 
@@ -46,203 +46,212 @@
 
 ---
 
-## 3. Environment Variables
+## 3. Environment Variables — LENGKAP
 
-Set environment variables berikut di Dokploy project settings → **Environment**:
+Set environment variables berikut di Dokploy project settings → **Environment**.
 
-### 3.1 Wajib (Required)
+> **Cara generate `APP_KEY`:**
+> Setelah deploy dan backend berjalan, SSH ke VPS lalu:
+>
+> ```bash
+> docker exec -it <nama_container_backend> php artisan key:generate --show
+> ```
+>
+> Copy hasilnya dan simpan ke variable `APP_KEY`.
 
-```bash
-# Backend
-APP_KEY=<generate dengan: php artisan key:generate --show>
-DB_PASSWORD=<password kuat, minimal 32 karakter>
-DB_ROOT_PASSWORD=<password root MySQL, minimal 32 karakter>
-BACKEND_URL=https://api.suryaciptaestetika.co.id
-FRONTEND_URL=https://suryaciptaestetika.co.id
+### 3.1 Variable WAJIB — Backend
 
-# Frontend
-NEXT_PUBLIC_SITE_URL=https://suryaciptaestetika.co.id
-NEXT_PUBLIC_API_URL=https://api.suryaciptaestetika.co.id/api
-CMS_API_URL=http://backend:8080/api
-```
+| Variable           | Contoh Value                   | Keterangan                                  |
+| ------------------ | ------------------------------ | ------------------------------------------- |
+| `APP_KEY`          | `base64:xxx...`                | Generate setelah deploy pertama             |
+| `DB_PASSWORD`      | `Str0ng!Passw0rd#2024Min32Kar` | Password database user, minimal 32 karakter |
+| `DB_ROOT_PASSWORD` | `R00t!Passw0rd#2024Min32Kar`   | Password root MySQL, minimal 32 karakter    |
+| `DB_DATABASE`      | `suryacipta`                   | Nama database (default sudah aman)          |
+| `DB_USERNAME`      | `suryacipta_app`               | User database (default sudah aman)          |
+| `BACKEND_URL`      | (lihat catatan di bawah)       | URL backend setelah deploy                  |
+| `FRONTEND_URL`     | (lihat catatan di bawah)       | URL frontend setelah deploy                 |
 
-### 3.2 Opsional
+### 3.2 Variable WAJIB — Frontend
 
-```bash
-# Database (default sudah aman)
-DB_DATABASE=suryacipta
-DB_USERNAME=suryacipta_app
+| Variable               | Contoh Value              | Keterangan                                     |
+| ---------------------- | ------------------------- | ---------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL` | (lihat catatan)           | URL publik frontend                            |
+| `NEXT_PUBLIC_API_URL`  | (lihat catatan)           | URL API backend + `/api`                       |
+| `CMS_API_URL`          | `http://backend:8080/api` | URL internal Docker untuk server-side fetching |
 
-# Frontend
-NEXT_PUBLIC_WHATSAPP_NUMBER=6281282333021
-NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX    # Google Analytics ID (jika ada)
-GOOGLE_SITE_VERIFICATION=         # Google Search Console (jika ada)
+### 3.3 Variable OPSIONAL
 
-# CMS
-CMS_PASSWORD_RESET_ENABLED=false  # Aktifkan hanya setelah mail provider dikonfigurasi
-```
-
-> **Catatan:** Jangan commit `.env` ke Git. Semua secrets disimpan di Dokploy Secret Manager.
+| Variable                      | Contoh Value        | Keterangan                                                  |
+| ----------------------------- | ------------------- | ----------------------------------------------------------- |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `6281282333021`     | Nomor WhatsApp untuk tombol WA floating                     |
+| `NEXT_PUBLIC_GA_ID`           | `G-XXXXXXXXXX`      | Google Analytics ID (isi jika punya)                        |
+| `GOOGLE_SITE_VERIFICATION`    | (string verifikasi) | Google Search Console (isi jika perlu)                      |
+| `CMS_PASSWORD_RESET_ENABLED`  | `false`             | Ubah ke `true` hanya jika mail provider sudah dikonfigurasi |
 
 ---
 
-## 4. Setup Domain & SSL (Traefik)
+## 4. Cara Mendapatkan URL Default Dokploy
 
 Setelah deployment pertama berhasil:
 
-### 4.1 Frontend — `suryaciptaestetika.co.id`
-
-1. **Dokploy** → **Project** → **suryacipta** → **Services** → **frontend**.
-2. Klik **Domains** → **Add Domain**.
-3. Masukkan: `suryaciptaestetika.co.id`.
-4. Centang **Wildcard** → `*.suryaciptaestetika.co.id` (opsional).
-5. Centang **SSL** → biarkan Traefik auto-provision via Let's Encrypt.
-6. Simpan.
-
-### 4.2 Backend API — `api.suryaciptaestetika.co.id`
-
-1. **Services** → **backend** → **Domains** → **Add Domain**.
-2. Masukkan: `api.suryaciptaestetika.co.id`.
-3. Centang **SSL**.
-4. Simpan.
-
-### 4.3 Verifikasi DNS
-
-Pastikan A record DNS mengarah ke IP VPS:
-
-```text
-suryaciptaestetika.co.id → <IP_VPS>
-api.suryaciptaestetika.co.id → <IP_VPS>
-```
+1. **Dokploy Dashboard** → **Project suryacipta** → **Services**.
+2. Akan ada 3 service: `frontend`, `backend`, `database`.
+3. Klik service **frontend** → lihat bagian **Domains** → akan ada URL default seperti:
+   ```
+   https://suryacipta-frontend-<random>.dokploy.app
+   ```
+4. Klik service **backend** → lihat bagian **Domains** → URL default seperti:
+   ```
+   https://suryacipta-backend-<random>.dokploy.app
+   ```
+5. Catat 2 URL tersebut, gunakan untuk mengisi `BACKEND_URL`, `FRONTEND_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`.
 
 ---
 
-## 5. Deploy Perdana
+## 5. Update Environment Variable Setelah Deploy Pertama
 
-### 5.1 Trigger Deployment
+Karena kita belum tahu URL default sebelum deploy, ikuti langkah ini:
 
-1. **Dokploy Dashboard** → **Project suryacipta**.
-2. Klik **Deploy** → pilih branch `main`.
-3. Dokploy akan:
-   - Clone repository.
-   - Build image `frontend` dan `backend` sesuai Dockerfile.
-   - Pull image `mysql:8.4`.
-   - Buat network: `edge` (external) dan `internal`.
-   - Buat volumes: `database_data`, `backend_uploads`, `backend_media`.
-   - Start container: `database` → `backend` → `frontend`.
-4. Proses memakan waktu **5–10 menit** untuk build pertama.
+### Langkah 1: Deploy dengan Variable Sementara
 
-### 5.2 Verifikasi Container
+Set di Dokploy environment dulu untuk **deploy pertama**:
 
 ```bash
-# SSH ke VPS, cek status
-docker ps
-
-# Harusnya terlihat 3 container:
-# - suryacipta_frontend
-# - suryacipta_backend
-# - suryacipta_database
-
-# Cek log backend untuk memastikan migration sukses
-docker logs suryacipta_backend --tail 50
+BACKEND_URL=http://backend:8080
+FRONTEND_URL=http://frontend:3000
+NEXT_PUBLIC_SITE_URL=http://frontend:3000
+NEXT_PUBLIC_API_URL=http://backend:8080/api
+CMS_API_URL=http://backend:8080/api
+DB_PASSWORD=Str0ng!Passw0rd#2024
+DB_ROOT_PASSWORD=R00t!Passw0rd#2024
+DB_DATABASE=suryacipta
+DB_USERNAME=suryacipta_app
+APP_KEY=base64:placeholder (nanti diganti)
 ```
 
-### 5.3 Cek Health
+> **Catatan:** Variable `BACKEND_URL` dan `FRONTEND_URL` di docker-compose digunakan untuk build argumen Docker. Untuk deploy pertama, URL internal sudah cukup karena container bisa saling komunikasi via Docker network.
+
+### Langkah 2: Deploy & Dapatkan URL Default
+
+1. Klik **Deploy** → tunggu selesai (5-10 menit).
+2. Setelah semua container running, buka **Services** → **frontend** → copy default domain.
+3. Buka **Services** → **backend** → copy default domain.
+
+Contoh:
+
+```
+Frontend: https://suryacipta-frontend-abc123.dokploy.app
+Backend:  https://suryacipta-backend-abc123.dokploy.app
+```
+
+### Langkah 3: Update Environment Variable
+
+Edit environment Dokploy dengan URL asli:
 
 ```bash
-# Health check frontend
-curl -I https://suryaciptaestetika.co.id
+# === UPDATE INI SETELAH DEPLOY ===
+BACKEND_URL=https://suryacipta-backend-abc123.dokploy.app
+FRONTEND_URL=https://suryacipta-frontend-abc123.dokploy.app
+NEXT_PUBLIC_SITE_URL=https://suryacipta-frontend-abc123.dokploy.app
+NEXT_PUBLIC_API_URL=https://suryacipta-backend-abc123.dokploy.app/api
 
-# Health check backend
-curl -I https://api.suryaciptaestetika.co.id/up
+# === INI TETAP (TIDAK BERUBAH) ===
+CMS_API_URL=http://backend:8080/api
+DB_PASSWORD=Str0ng!Passw0rd#2024
+DB_ROOT_PASSWORD=R00t!Passw0rd#2024
+DB_DATABASE=suryacipta
+DB_USERNAME=suryacipta_app
+APP_KEY=<hasil dari generate>
 
-# Cek API content publik
-curl https://api.suryaciptaestetika.co.id/api/v1/content
+# === OPSIONAL ===
+NEXT_PUBLIC_WHATSAPP_NUMBER=6281282333021
+NEXT_PUBLIC_GA_ID=
+GOOGLE_SITE_VERIFICATION=
+CMS_PASSWORD_RESET_ENABLED=false
 ```
+
+### Langkah 4: Redeploy
+
+1. Klik **Deploy** sekali lagi dengan environment variable baru.
+2. Sekarang aplikasi bisa diakses via domain Dokploy default.
 
 ---
 
-## 6. Bootstrap Admin CMS
+## 6. Generate APP_KEY & Bootstrap Admin
 
-Setelah backend berjalan, buat admin pertama:
-
-### 6.1 SSH ke Server
+### 6.1 Generate APP_KEY
 
 ```bash
+# SSH ke VPS
 ssh user@<IP_VPS>
-```
 
-### 6.2 Masuk ke Container Backend
-
-```bash
+# Masuk ke container backend
 docker exec -it suryacipta_backend bash
+
+# Generate key
+php artisan key:generate --show
+# Output: base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### 6.3 Generate App Key (hanya sekali)
+Copy output dan simpan ke Dokploy environment `APP_KEY`, lalu redeploy.
+
+### 6.2 Seed Content Awal
 
 ```bash
-php artisan key:generate
-# Copy output KEY, simpan di Dokploy environment variable APP_KEY
+docker exec -it suryacipta_backend php artisan db:seed --class=CmsContentSeeder
 ```
 
-### 6.4 Seed Content Awal
+### 6.3 Buat Admin User
 
 ```bash
-php artisan db:seed --class=CmsContentSeeder
-```
-
-### 6.5 Buat Admin User
-
-```bash
-php artisan cms:create-admin
+docker exec -it suryacipta_backend php artisan cms:create-admin
 ```
 
 Ikuti prompt:
 
 - **Name:** `Super Admin`
 - **Email:** `admin@suryaciptaestetika.co.id`
-- **Password:** minimal 12 karakter (simpan di password manager)
+- **Password:** minimal 12 karakter
 
-### 6.6 Setup MFA
+### 6.4 Setup MFA
 
-1. Login ke `https://api.suryaciptaestetika.co.id/admin`.
-2. Scan QR code TOTP dengan Google Authenticator / Authy.
-3. Simpan **recovery codes** yang ditampilkan.
-4. Selesai.
+1. Buka browser → `https://suryacipta-backend-xxx.dokploy.app/admin`
+2. Login dengan email & password yang dibuat.
+3. Scan QR code TOTP dengan Google Authenticator / Authy.
+4. Simpan **recovery codes**.
+5. Selesai ✅
 
 ---
 
 ## 7. Verifikasi Smoke Test
 
-Setelah bootstrap, verifikasi semua fungsi:
-
 ### 7.1 Frontend
 
-- [ ] Landing page: `https://suryaciptaestetika.co.id`
-- [ ] Halaman produk: `/produk`
-- [ ] Halaman blog: `/blog`
-- [ ] Halaman portofolio: `/portofolio`
-- [ ] Halaman kontak: `/kontak` → submit form RFQ
-- [ ] Halaman tentang kami: `/tentang-kami`
-- [ ] Halaman kebijakan privasi: `/kebijakan-privasi`
-- [ ] Sitemap: `/sitemap.xml`
-- [ ] Robots: `/robots.txt`
+- [ ] Buka `https://suryacipta-frontend-xxx.dokploy.app` — landing page tampil
+- [ ] `/produk` — halaman produk
+- [ ] `/blog` — halaman blog
+- [ ] `/portofolio` — halaman portofolio
+- [ ] `/kontak` — form RFQ bisa diisi & submit
+- [ ] `/tentang-kami` — halaman tentang
+- [ ] `/kebijakan-privasi` — halaman privasi
+- [ ] `/sitemap.xml` — sitemap
+- [ ] `/robots.txt` — robots
 
 ### 7.2 Backend API
 
-- [ ] Health check: `GET /up` → `200`
-- [ ] Content API: `GET /api/v1/content` → `200` + JSON
-- [ ] Product detail: `GET /api/v1/products/{slug}` → `200`
-- [ ] Blog detail: `GET /api/v1/posts/{slug}` → `200`
-- [ ] Inquiry API: `POST /api/inquiries` → `201` (test dengan form kontak)
+```bash
+# Health check
+curl -I https://suryacipta-backend-xxx.dokploy.app/up
+
+# Content API
+curl https://suryacipta-backend-xxx.dokploy.app/api/v1/content
+```
 
 ### 7.3 CMS Admin
 
-- [ ] Login: `https://api.suryaciptaestetika.co.id/admin`
-- [ ] Dashboard muncul dengan statistik
-- [ ] CRUD produk, blog, portofolio, FAQ, testimonial, media
-- [ ] Manage inquiries
-- [ ] Audit log
+- [ ] Login: `https://suryacipta-backend-xxx.dokploy.app/admin`
+- [ ] Dashboard muncul
+- [ ] CRUD konten berfungsi
 
 ---
 
@@ -251,23 +260,17 @@ Setelah bootstrap, verifikasi semua fungsi:
 ### 8.1 Manual via Dokploy Dashboard
 
 1. Push perubahan ke `main`.
-2. Buka **Dokploy Dashboard** → **Project suryacipta**.
-3. Klik **Deploy** → pilih branch `main`.
-4. Dokploy otomatis rebuild image yang berubah dan rolling update.
+2. **Dokploy Dashboard** → **Project suryacipta** → **Deploy**.
+3. Dokploy otomatis rebuild dan rolling update.
 
 ### 8.2 Auto Deploy (Opsional)
 
-Aktifkan **Auto Deploy** di Dokploy:
-
-1. **Project Settings** → **Deploy**.
-2. Centang **Auto Deploy** → pilih branch `main`.
-3. Setiap push ke `main` akan otomatis trigger deployment baru.
+1. **Project Settings** → **Deploy** → centang **Auto Deploy** → branch `main`.
+2. Setiap push ke `main` auto-deploy.
 
 ### 8.3 Rollback
 
-1. **Project** → **Deployments** → pilih deployment sebelumnya.
-2. Klik **Rollback**.
-3. Dokploy akan deploy ulang image dari commit sebelumnya.
+1. **Project** → **Deployments** → pilih deployment sebelumnya → **Rollback**.
 
 ---
 
@@ -276,71 +279,66 @@ Aktifkan **Auto Deploy** di Dokploy:
 ### 9.1 Monitoring Built-in Dokploy
 
 - **Logs:** Real-time container logs di dashboard.
-- **Metrics:** CPU, memory, disk usage per container.
-- **Notifications:** Setup Slack/Discord/Email untuk deployment events.
+- **Metrics:** CPU, memory, disk per container.
 
 ### 9.2 Backup Database
 
-Buat cron job di VPS untuk backup harian:
+Buat cron job di VPS:
 
 ```bash
-# Backup MySQL dari container
 docker exec suryacipta_database mysqldump \
   -u root \
   -p"$DB_ROOT_PASSWORD" \
   suryacipta \
   | gzip > /backups/suryacipta-$(date +%Y%m%d-%H%M%S).sql.gz
 
-# Hapus backup lebih dari 30 hari
 find /backups -name "*.sql.gz" -mtime +30 -delete
 ```
 
 ### 9.3 Backup Volume
 
 ```bash
-# Backup volume data (inquiry attachments, CMS media)
 docker run --rm \
-  -v backend_uploads:/source:ro \
+  -v suryacipta_backend_uploads:/source:ro \
   -v /backups:/target \
-  alpine tar czf /target/backend-uploads-$(date +%Y%m%d).tar.gz -C /source .
+  alpine tar czf /target/uploads-$(date +%Y%m%d).tar.gz -C /source .
 
 docker run --rm \
-  -v backend_media:/source:ro \
+  -v suryacipta_backend_media:/source:ro \
   -v /backups:/target \
-  alpine tar czf /target/backend-media-$(date +%Y%m%d).tar.gz -C /source .
+  alpine tar czf /target/media-$(date +%Y%m%d).tar.gz -C /source .
 ```
 
 ---
 
 ## 10. Troubleshooting
 
-| Masalah                      | Penyebab                    | Solusi                                                 |
-| ---------------------------- | --------------------------- | ------------------------------------------------------ |
-| Container restart-loop       | DB connection gagal         | Cek environment `DB_HOST`, `DB_PASSWORD`               |
-| 502 Bad Gateway              | Frontend/backend belum siap | Tunggu 30 detik, reload                                |
-| SSL error                    | Domain belum pointing       | Verifikasi DNS A record                                |
-| Migration gagal              | DB password mismatch        | Reset password di Dokploy env, redeploy                |
-| 413 Request Entity Too Large | Upload file melebihi limit  | Cek `post_max_size` & `upload_max_filesize` di PHP ini |
-| Frontend blank / 404         | NEXT_PUBLIC_API_URL salah   | Pastikan URL backend benar di env                      |
-| Rate limit inquiry           | IP terkena throttle         | Whitelist IP atau tunggu 1 menit                       |
+| Masalah                       | Penyebab                    | Solusi                                     |
+| ----------------------------- | --------------------------- | ------------------------------------------ |
+| Container restart-loop        | DB connection gagal         | Cek `DB_PASSWORD` di Dokploy environment   |
+| 502 Bad Gateway               | Service belum siap          | Tunggu 30 detik, reload                    |
+| Migration gagal               | `APP_KEY` belum diisi       | Generate key, update environment, redeploy |
+| 413 Request Entity Too Large  | Upload > 5MB                | Sudah dibatasi di PHP config               |
+| Rate limit inquiry            | IP terkena throttle         | Tunggu 1 menit                             |
+| Frontend tidak bisa fetch API | `NEXT_PUBLIC_API_URL` salah | Pastikan pakai URL backend yg benar        |
 
 ---
 
 ## 11. Quick Reference
 
-### Perintah Berguna (SSH)
+### Perintah Berguna (SSH ke VPS)
 
 ```bash
-# Cek status semua container
-docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+# Lihat container
+docker ps --format "table {{.Names}}\t{{.Status}}"
 
-# Log real-time backend
+# Log backend
 docker logs -f suryacipta_backend
 
-# Log real-time frontend
+# Log frontend
 docker logs -f suryacipta_frontend
 
-# Akses shell backend
+# Masuk container backend
 docker exec -it suryacipta_backend bash
 
 # Akses MySQL
@@ -348,30 +346,12 @@ docker exec -it suryacipta_database mysql -u root -p
 
 # Restart service
 docker compose -p suryacipta restart backend
-
-# Rebuild tanpa cache
-docker compose -p suryacipta build --no-cache backend
 ```
 
-### Struktur Volume
+### Volume Penting
 
 ```text
-docker volume ls
-# local    suryacipta_backend_uploads     → storage/app/private (inquiries)
-# local    suryacipta_backend_media       → storage/app/public (CMS media)
-# local    suryacipta_database_data       → /var/lib/mysql
+suryacipta_backend_uploads → storage/app/private (inquiries)
+suryacipta_backend_media   → storage/app/public (CMS media)
+suryacipta_database_data   → /var/lib/mysql
 ```
-
----
-
-## 12. Security Checklist
-
-- [ ] Semua secrets disimpan di Dokploy, bukan di .env file
-- [ ] MFA TOTP aktif untuk semua admin CMS
-- [ ] Password admin minimal 12 karakter
-- [ ] Database hanya accessible dari internal network
-- [ ] Container berjalan sebagai non-root (www-data / nextjs)
-- [ ] Hanya port 80/443 terbuka di firewall VPS
-- [ ] Backup database terjadwal otomatis
-- [ ] Dependency audit: `composer audit` & `npm audit` sebelum deploy
-- [ ] SSL via Let's Encrypt (auto-renewal oleh Traefik)
