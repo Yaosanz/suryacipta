@@ -42,12 +42,16 @@
 - [ ] Buat **Github App** di Dokploy, pointing ke repo `Yaosanz/suryacipta`
 - [ ] Pilih branch `main` (setelah PR di-merge)
 - [ ] Compose path: `./docker-compose.yml`
+- [ ] **PENTING**: Project harus bertipe **Docker Compose** — BUKAN Nixpacks. Error `Nixpacks was unable to generate a build plan` terjadi jika salah memilih tipe builder.
 - [ ] Set environment variables (via Dokploy Secrets):
       | Variable | Keterangan |
       |---|---|
       | `APP_KEY` | Generate with `php artisan key:generate --show` |
-      | `DB_PASSWORD` | Password database user |
-      | `DB_ROOT_PASSWORD` | Password MySQL root |
+      | `DB_HOST` | `suryacipta-suryacipta-iztnsy` (hostname managed Dokploy) |
+      | `DB_PORT` | `3306` |
+      | `DB_DATABASE` | `suryacipta` |
+      | `DB_USERNAME` | `mysql` |
+      | `DB_PASSWORD` | Password database (Dokploy Secret) |
       | `FRONTEND_URL` | `https://suryaciptaestetika.co.id` |
       | `BACKEND_URL` | `https://api.suryaciptaestetika.co.id` |
       | `NEXT_PUBLIC_WHATSAPP_NUMBER` | `6281282333021` |
@@ -56,3 +60,21 @@
 - [ ] Bootstrap admin: `docker exec -it <backend_container> php artisan cms:create-admin`
 - [ ] Setup domain & TLS di Traefik/Dokploy
 - [ ] Test: buka website, cek produk, portofolio, blog, form kontak
+
+## Fase 7: Migrasi ke Managed MySQL Dokploy ✅
+
+- [x] **Database**: Buat database managed MySQL di Dokploy (nama: `suryacipta`, user: `mysql`)
+- [x] **Catat hostname internal**: `suryacipta-suryacipta-iztnsy`
+- [x] `docker-compose.yml`: Hapus service `database` internal + volume `database_data` + network `internal`
+- [x] `docker-compose.yml`: Backend diarahkan ke `DB_HOST=suryacipta-suryacipta-iztnsy`, `DB_USERNAME=mysql`
+- [x] `.env.docker.example`: Update `DB_HOST`, `DB_PORT`, `DB_USERNAME`, hapus `DB_ROOT_PASSWORD`
+- [x] `DEPLOY_DOKPLOY.md`: Update lengkap — managed DB, env vars, backup, troubleshooting, quick reference
+- [x] `README.md`: Update arsitektur & deployment section
+- [ ] **Verifikasi**: Pastikan deployment Dokploy berhasil dengan project bertipe Docker Compose
+
+## Fase 8: Perbaikan Error Nixpacks Build ✅ (Solusi terdokumentasi)
+
+- [x] **MASALAH**: Dokploy mencoba Nixpacks build → `Nixpacks was unable to generate a build plan`
+- [x] **PENYEBAB**: Project dibuat dengan tipe Nixpacks, padahal ini monorepo (frontend + backend) tanpa Dockerfile/package.json di root
+- [x] **SOLUSI**: Buat ulang project dengan tipe **Docker Compose** (compose path `./docker-compose.yml`)
+- [x] `DEPLOY_DOKPLOY.md`: Dokumentasikan error & solusinya di §2.2

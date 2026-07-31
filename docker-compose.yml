@@ -16,12 +16,11 @@ services:
     expose:
       - "3000"
     environment:
+      # Internal Docker hostname untuk server-side fetch (server-to-server).
       CMS_API_URL: "http://backend:8080/api"
-      # Runtime env for server-side asset URL resolution. Public origin must be
-      # reachable by browsers, unlike CMS_API_URL (internal Docker hostname).
+      # Runtime env untuk resolusi URL aset di sisi server. Origin publik
+      # harus bisa dijangkau browser, beda dengan CMS_API_URL.
       NEXT_PUBLIC_API_URL: "${BACKEND_URL:?BACKEND_URL is required}/api"
-    networks:
-      - edge
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
@@ -53,10 +52,13 @@ services:
       LOG_DEPRECATIONS_CHANNEL: "null"
       LOG_LEVEL: warning
       DB_CONNECTION: mysql
-      DB_HOST: database
-      DB_PORT: "3306"
+      # Managed MySQL dari Dokploy (bukan container database internal).
+      # DB_HOST adalah hostname internal yang tampil di halaman Database
+      # Dokploy, bukan IP publik.
+      DB_HOST: "${DB_HOST:-suryacipta-suryacipta-iztnsy}"
+      DB_PORT: "${DB_PORT:-3306}"
       DB_DATABASE: "${DB_DATABASE:-suryacipta}"
-      DB_USERNAME: "${DB_USERNAME:-suryacipta_app}"
+      DB_USERNAME: "${DB_USERNAME:-mysql}"
       DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
       CACHE_STORE: database
       SESSION_DRIVER: database
@@ -69,15 +71,9 @@ services:
       TRUSTED_PROXIES: "*"
       RUN_MIGRATIONS: "true"
       CMS_PASSWORD_RESET_ENABLED: "${CMS_PASSWORD_RESET_ENABLED:-false}"
-    depends_on:
-      database:
-        condition: service_healthy
     volumes:
       - backend_uploads:/var/www/html/storage/app/private
       - backend_media:/var/www/html/storage/app/public
-    networks:
-      - edge
-      - internal
     read_only: true
     tmpfs:
       - /tmp:rw,nosuid,nodev,size=128m,uid=33,gid=33,mode=0770
@@ -90,38 +86,6 @@ services:
     pids_limit: 200
     stop_grace_period: 30s
 
-  database:
-    image: mysql:8.4
-    restart: unless-stopped
-    command:
-      - --local-infile=0
-      - --skip-name-resolve
-    environment:
-      MYSQL_DATABASE: "${DB_DATABASE:-suryacipta}"
-      MYSQL_USER: "${DB_USERNAME:-suryacipta_app}"
-      MYSQL_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
-      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}"
-    volumes:
-      - database_data:/var/lib/mysql
-    networks:
-      - internal
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 300
-    stop_grace_period: 60s
-
 volumes:
   backend_uploads:
   backend_media:
-  database_data:
-
-networks:
-  edge:
-  internal:
-    internal: true
