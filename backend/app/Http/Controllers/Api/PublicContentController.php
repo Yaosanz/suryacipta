@@ -193,13 +193,19 @@ class PublicContentController extends Controller
         return $data;
     }
 
+    /**
+     * Return a relative asset path (e.g. /storage/xxx.jpg) so the frontend
+     * can resolve it against its own API origin. This avoids baking Docker
+     * internal hostnames into the payload.
+     */
     private function assetUrl(?string $path): ?string
     {
         if (blank($path) || Str::contains($path, ['..', '\\'])) {
             return null;
         }
 
-        return url(Storage::disk('public')->url($path));
+        // Storage::disk('public')->url() returns '/storage/xxx.jpg' by default.
+        return Storage::disk('public')->url($path);
     }
 
     private function video(object $record): ?array

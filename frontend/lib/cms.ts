@@ -1,6 +1,6 @@
-import "server-only";
+import 'server-only';
 
-import type { CmsVideo, PortfolioItem, Product } from "@/lib/cms-types";
+import type { CmsVideo, PortfolioItem, Product } from '@/lib/cms-types';
 
 export type CmsSection = {
   page: string;
@@ -104,7 +104,7 @@ export type CmsHomeContent = {
 };
 
 type ApiPayload = {
-  site: CmsHomeContent["site"] | null;
+  site: CmsHomeContent['site'] | null;
   sections: CmsSection[];
   products: Array<{
     slug: string;
@@ -134,27 +134,57 @@ type ApiPayload = {
   }>;
   testimonials: CmsTestimonial[];
   team: CmsTeamMember[];
-  faqs: CmsHomeContent["faqs"];
+  faqs: CmsHomeContent['faqs'];
   posts: CmsBlogPost[];
 };
 
 const cmsFetchOptions = {
-  cache: "no-store",
-  headers: { Accept: "application/json" },
+  cache: 'no-store',
+  headers: { Accept: 'application/json' },
 } as const;
 
 function apiBaseUrl(): string {
   const baseUrl = process.env.CMS_API_URL ?? process.env.NEXT_PUBLIC_API_URL;
 
   if (!baseUrl) {
-    throw new Error("CMS_API_URL atau NEXT_PUBLIC_API_URL wajib dikonfigurasi.");
+    throw new Error('CMS_API_URL atau NEXT_PUBLIC_API_URL wajib dikonfigurasi.');
   }
 
-  return baseUrl.replace(/\/$/, "");
+  return baseUrl.replace(/\/$/, '').replace(/\/api$/, '');
+}
+
+/**
+ * Resolve a relative asset path (e.g. /storage/xxx.jpg) against the API origin.
+ * The backend now returns relative paths so the frontend can build the correct
+ * absolute URL regardless of Docker internal hostnames.
+ */
+function resolveAssetUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+
+  // Already an absolute URL — return as-is (e.g. external images, videos).
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  // Relative path — resolve against API base URL.
+  const base = apiBaseUrl();
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${normalized}`;
+}
+
+/**
+ * Apply resolveAssetUrl to all media fields in a video object.
+ */
+function resolveVideo(video: CmsVideo | null | undefined): CmsVideo | null | undefined {
+  if (!video) return video;
+  return {
+    ...video,
+    url: resolveAssetUrl(video.url) ?? video.url,
+  };
 }
 
 async function fetchCms<T>(path: string): Promise<T | null> {
-  const response = await fetch(`${apiBaseUrl()}${path}`, cmsFetchOptions);
+  const response = await fetch(`${apiBaseUrl()}/api${path}`, cmsFetchOptions);
 
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`CMS merespons dengan status ${response.status} untuk ${path}.`);
@@ -166,15 +196,22 @@ async function fetchCms<T>(path: string): Promise<T | null> {
 }
 
 export async function getCmsHomeContent(): Promise<CmsHomeContent> {
-  const data = await fetchCms<ApiPayload>("/v1/content");
+  const data = await fetchCms<ApiPayload>('/v1/content');
 
   if (!data?.site) {
-    throw new Error("Profil website belum tersedia di CMS.");
+    throw new Error('Profil website belum tersedia di CMS.');
   }
 
   return {
-    site: data.site,
-    sections: data.sections,
+    site: {
+      ...data.site,
+      logo: resolveAssetUrl(data.site.logo),
+    },
+    sections: data.sections.map((section) => ({
+      ...section,
+      image: resolveAssetUrl(section.image),
+      video: resolveVideo(section.video) ?? null,
+    })),
     products: data.products.map((product) => ({
       id: product.slug,
       name: product.name,
@@ -183,9 +220,9 @@ export async function getCmsHomeContent(): Promise<CmsHomeContent> {
       description: product.shortDescription,
       longDescription: product.description ?? undefined,
       features: product.features,
-      image: product.image,
+      image: resolveAssetUrl(product.image),
       imageAlt: product.imageAlt ?? undefined,
-      video: product.video ?? undefined,
+      video: resolveVideo(product.video) ?? undefined,
       featured: product.featured,
       seo: product.seo,
     })),
@@ -195,24 +232,29 @@ export async function getCmsHomeContent(): Promise<CmsHomeContent> {
       clientName: project.clientName ?? undefined,
       location: project.location,
       category: project.category,
-      year: String(project.year ?? ""),
+      year: String(project.year ?? ''),
       description: project.description,
-      image: project.image,
+      image: resolveAssetUrl(project.image),
       imageAlt: project.imageAlt ?? undefined,
-      video: project.video ?? undefined,
+      video: resolveVideo(project.video) ?? undefined,
       featured: project.featured,
     })),
     testimonials: data.testimonials,
-    team: data.team,
+    team: data.team.map((member) => ({
+      ...member,
+      photo: resolveAssetUrl(member.photo),
+    })),
     faqs: data.faqs,
-    posts: data.posts,
+    posts: data.posts.map((post) => ({
+      ...post,
+      image: resolveAssetUrl(post.image),
+      video: resolveVideo(post.video) ?? null,
+    })),
   };
 }
 
 export async function getCmsProduct(slug: string): Promise<Product | null> {
-  const data = await fetchCms<ApiPayload["products"][number]>(
-    `/v1/products/${encodeURIComponent(slug)}`,
-  );
+  const data = await fetchCms<ApiPayload['products'][number]>(`/v1/products/${encodeURIComponent(slug)}`);
 
   if (!data) return null;
 
@@ -224,22 +266,26 @@ export async function getCmsProduct(slug: string): Promise<Product | null> {
     description: data.shortDescription,
     longDescription: data.description ?? undefined,
     features: data.features,
-    image: data.image,
+    image: resolveAssetUrl(data.image),
     imageAlt: data.imageAlt ?? undefined,
-    video: data.video ?? undefined,
+    video: resolveVideo(data.video) ?? undefined,
     featured: data.featured,
     seo: data.seo,
   };
 }
 
 export async function getCmsPost(slug: string): Promise<CmsBlogPost | null> {
-  return fetchCms<CmsBlogPost>(`/v1/posts/${encodeURIComponent(slug)}`);
+  const post = await fetchCms<CmsBlogPost>(`/v1/posts/${encodeURIComponent(slug)}`);
+
+  if (!post) return null;
+
+  return {
+    ...post,
+    image: resolveAssetUrl(post.image),
+    video: resolveVideo(post.video) ?? null,
+  };
 }
 
-export function findCmsSection(
-  content: CmsHomeContent,
-  page: string,
-  key: string,
-): CmsSection | undefined {
+export function findCmsSection(content: CmsHomeContent, page: string, key: string): CmsSection | undefined {
   return content.sections.find((section) => section.page === page && section.key === key);
 }
