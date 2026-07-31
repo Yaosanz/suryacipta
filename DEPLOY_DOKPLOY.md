@@ -133,6 +133,13 @@ Set environment variables berikut di Dokploy project settings → **Environment*
 > Gambar CMS di-render langsung dari URL backend (`unoptimized`) untuk menghindari
 > proteksi SSRF Next.js yang memblokir IP privat saat image optimizer mencoba fetch.
 > Image sudah dikompresi saat upload, jadi optimasi Next.js tidak diperlukan.
+>
+> **JANGAN set `CMS_API_URL` ke URL publik** (contoh `https://suryacipta-backend-...sslip.io/api`).
+> Di `docker-compose.yml`, `CMS_API_URL` sudah di-hardcode ke `http://backend:8080/api`
+> (hostname internal Docker network). Jika di-override lewat environment Dokploy, frontend
+> akan mem-fetch lewat URL publik (lewati Traefik) — lebih lambat dan rawan gagal saat
+> deployment pertama karena domain/TLS belum siap. **Biarkan `CMS_API_URL` kosong / hapus
+> dari environment Dokploy.**
 
 ### 3.3 Variable OPSIONAL
 
@@ -167,6 +174,19 @@ Setelah deployment pertama berhasil:
 ```
 
 5. Catat 2 URL tersebut, gunakan untuk mengisi `BACKEND_URL`, `FRONTEND_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`.
+
+### 4.1 Port Service di Domain Dokploy
+
+Saat menambahkan domain ke service, pastikan **port-nya benar** sesuai port container:
+
+| Service    | Port Container | Keterangan                                  |
+| ---------- | -------------- | ------------------------------------------- |
+| `frontend` | `3000`         | Next.js standalone (`EXPOSE 3000`)          |
+| `backend`  | `8080`         | Apache PHP (`Listen 8080`) — **BUKAN 8000** |
+
+> **PENTING:** Port backend adalah **8080**, bukan `8000`. Port `8000` hanya dipakai
+> `php artisan serve` di dev lokal. Jika domain backend di-set ke port `8000`, Traefik
+> mengarah ke port yang tidak dilayani container → **502 Bad Gateway** saat domain dibuka.
 
 ---
 
@@ -394,17 +414,19 @@ docker run --rm \
 
 ## 10. Troubleshooting
 
-| Masalah                       | Penyebab                               | Solusi                                                   |
-| ----------------------------- | -------------------------------------- | -------------------------------------------------------- |
-| `Nixpacks build failed`       | Project dibuat dengan tipe Nixpacks    | Ubah ke **Docker Compose** (lihat §2.2)                  |
-| Backend restart-loop          | DB connection gagal                    | Cek `DB_HOST`/`DB_PASSWORD` di Dokploy environment       |
-| `SQLSTATE[HY000] [2002]`      | Hostname DB salah                      | Pastikan `DB_HOST` = hostname internal (bukan IP publik) |
-| Migration gagal               | `APP_KEY` belum diisi                  | Generate key, update environment, redeploy               |
-| 502 Bad Gateway               | Service belum siap                     | Tunggu 30 detik, reload                                  |
-| 413 Request Entity Too Large  | Upload > 5MB                           | Sudah dibatasi di PHP config                             |
-| Rate limit inquiry            | IP terkena throttle                    | Tunggu 1 menit                                           |
-| Frontend tidak bisa fetch API | `NEXT_PUBLIC_API_URL` salah            | Pastikan pakai URL backend yg benar                      |
-| Gambar produk tidak muncul    | `NEXT_PUBLIC_API_URL` di runtime salah | Pastikan build args & runtime env konsisten              |
+| Masalah                        | Penyebab                                | Solusi                                                   |
+| ------------------------------ | --------------------------------------- | -------------------------------------------------------- |
+| `Nixpacks build failed`        | Project dibuat dengan tipe Nixpacks     | Ubah ke **Docker Compose** (lihat §2.2)                  |
+| Backend restart-loop           | DB connection gagal                     | Cek `DB_HOST`/`DB_PASSWORD` di Dokploy environment       |
+| `SQLSTATE[HY000] [2002]`       | Hostname DB salah                       | Pastikan `DB_HOST` = hostname internal (bukan IP publik) |
+| Migration gagal                | `APP_KEY` belum diisi                   | Generate key, update environment, redeploy               |
+| 502 Bad Gateway                | Service belum siap                      | Tunggu 30 detik, reload                                  |
+| 502 backend saat domain dibuka | Port domain backend diisi `8000`        | Ubah port domain backend ke **8080** di Dokploy          |
+| Backend fetch lambat/gagal     | `CMS_API_URL` di-override ke URL publik | Hapus `CMS_API_URL` dari environment Dokploy             |
+| 413 Request Entity Too Large   | Upload > 5MB                            | Sudah dibatasi di PHP config                             |
+| Rate limit inquiry             | IP terkena throttle                     | Tunggu 1 menit                                           |
+| Frontend tidak bisa fetch API  | `NEXT_PUBLIC_API_URL` salah             | Pastikan pakai URL backend yg benar                      |
+| Gambar produk tidak muncul     | `NEXT_PUBLIC_API_URL` di runtime salah  | Pastikan build args & runtime env konsisten              |
 
 ---
 
