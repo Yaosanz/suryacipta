@@ -1,33 +1,34 @@
-# Deployment Preparation Checklist
+# Deployment Preparation Checklist ✅
 
-## Phase 1: Clean Up Unnecessary Files
+## Phase 1: Clean Up Unnecessary Files ✅
 
-- [ ] Delete `nul` file at root
-- [ ] Clean `.tmp/` directory
-- [ ] Clean `backend/storage/framework/qa-tmp/` directory
+- [x] Delete `nul` file at root
+- [x] Clean `.tmp/` directory
+- [x] Clean `backend/storage/framework/qa-tmp/` directory
+- [x] Remove `backend/package-lock.json`
 
-## Phase 2: Update .gitignore
+## Phase 2: Update .gitignore ✅
 
-- [ ] Add `.tmp/` to root `.gitignore`
-- [ ] Add `nul` to root `.gitignore`
-- [ ] Add `qa-tmp/` patterns to backend `.gitignore`
+- [x] Add `.tmp/`, `nul`, `*.tmp` to root `.gitignore`
+- [x] Add `qa-tmp/`, `package-lock.json`, `*.tmp` to backend `.gitignore`
 
-## Phase 3: Create Missing Documentation
+## Phase 3: Create Missing Documentation ✅
 
-- [ ] Create `DEPLOY_DOKPLOY.md`
-- [ ] Create `SECURITY.md`
+- [x] Create `DEPLOY_DOKPLOY.md` (Dokploy v2 runbook)
+- [x] Create `SECURITY.md`
 
-## Phase 4: Commit All Current Work
+## Phase 4: Commit All Current Work ✅
 
-- [ ] Stage modified and untracked files
-- [ ] Commit with proper message
-- [ ] Merge to `main` branch
+- [x] Stage 181 files (modified + untracked)
+- [x] Commit: `chore(deploy): clean up workspace, add deployment docs, and prepare Dokploy deployment`
+- [x] Push to `fix/cms-authorization-ux`
+- [ ] Merge to `main` branch (via Pull Request atau langsung)
 
-## Phase 5: Provide Dokploy Deployment Steps
+## Phase 5: Dokploy Deployment Steps ✅ (documented in DEPLOY_DOKPLOY.md)
 
-- [ ] GitHub integration setup
-- [ ] Environment variables
-- [ ] Docker Compose configuration
-- [ ] Domain & SSL setup
-- [ ] Initial bootstrap
-- [ ] Monitoring & backup
+- [x] GitHub integration setup
+- [x] Environment variables
+- [x] Docker Compose configuration
+- [x] Domain & SSL setup
+- [x] Initial bootstrap
+- [x] Monitoring & backup
