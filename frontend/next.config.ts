@@ -67,6 +67,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   allowedDevOrigins: ['127.0.0.1'],
   images: {
+    // CMS media is served directly by the backend API. The Next.js optimizer
+    // would otherwise block private IPs (127.0.0.1, 10.x, 172.16-31.x,
+    // 192.168.x) via SSRF protection, breaking local development. Images are
+    // already compressed at upload time, so optimization is unnecessary.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: apiOrigin.protocol,

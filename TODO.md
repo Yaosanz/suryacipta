@@ -1,34 +1,58 @@
-# Deployment Preparation Checklist ✅
+# ✅ Checklist Persiapan Deployment Dokploy
 
-## Phase 1: Clean Up Unnecessary Files ✅
+## Fase 1: Pembersihan Workspace ✅
 
-- [x] Delete `nul` file at root
-- [x] Clean `.tmp/` directory
-- [x] Clean `backend/storage/framework/qa-tmp/` directory
-- [x] Remove `backend/package-lock.json`
+- [x] Hapus file `nul` (artifact Windows)
+- [x] Hapus folder `.tmp/` (temporary SQLite)
+- [x] Hapus `backend/storage/framework/qa-tmp/`
+- [x] Hapus `backend/package-lock.json`
+- [x] Update `.gitignore` (tambah `nul`, `*.tmp`, `qa-tmp/`, `package-lock.json`)
 
-## Phase 2: Update .gitignore ✅
+## Fase 2: Dokumen Deployment ✅
 
-- [x] Add `.tmp/`, `nul`, `*.tmp` to root `.gitignore`
-- [x] Add `qa-tmp/`, `package-lock.json`, `*.tmp` to backend `.gitignore`
+- [x] `DEPLOY_DOKPLOY.md` — Panduan lengkap deployment Dokploy v2
+- [x] `SECURITY.md` — Security policy (reporting, PGP, supported versions)
 
-## Phase 3: Create Missing Documentation ✅
+## Fase 3: Perbaikan Image Produk ✅
 
-- [x] Create `DEPLOY_DOKPLOY.md` (Dokploy v2 runbook)
-- [x] Create `SECURITY.md`
+- [x] Backend: `assetUrl()` return **relative path** (`/storage/xxx.jpg`)
+- [x] Frontend `cms.ts`: Fungsi `resolveAssetUrl()` untuk menggabungkan API origin + path
+- [x] Frontend `next.config.ts`: `remotePatterns` format object benar
+- [x] Terapkan resolusi URL ke semua field media (products, portfolio, posts, sections, team, site)
+- [x] **VERIFIED**: Produk dengan image (Kubah Masjid GRC) sekarang render `<img>` dengan URL benar
 
-## Phase 4: Commit All Current Work ✅
+## Fase 4: Perbaikan SSRF Image Optimizer ✅
 
-- [x] Stage 181 files (modified + untracked)
-- [x] Commit: `chore(deploy): clean up workspace, add deployment docs, and prepare Dokploy deployment`
-- [x] Push to `fix/cms-authorization-ux`
-- [ ] Merge to `main` branch (via Pull Request atau langsung)
+- [x] **MASALAH**: Next.js image optimizer memblokir IP privat (`127.0.0.1`) → error `upstream image resolved to private ip`
+- [x] `next.config.ts`: Tambah `unoptimized: true` — gambar langsung dirender dari backend
+- [x] `cms.ts`: Pisahkan `cmsApiUrl()` (fetch internal) vs `publicApiOrigin()` (URL aset publik)
+- [x] `docker-compose.yml`: Tambah `NEXT_PUBLIC_API_URL` runtime di service frontend
+- [x] `DEPLOY_DOKPLOY.md`: Dokumentasikan variable & perilaku baru
+- [x] **VERIFIED**: `npm run build` sukses, TypeScript clean
+- [x] **VERIFIED**: HTML render `src="http://127.0.0.1:8000/storage/..."` langsung (tanpa `/_next/image`)
 
-## Phase 5: Dokploy Deployment Steps ✅ (documented in DEPLOY_DOKPLOY.md)
+## Fase 5: Git & Push ✅
 
-- [x] GitHub integration setup
-- [x] Environment variables
-- [x] Docker Compose configuration
-- [x] Domain & SSL setup
-- [x] Initial bootstrap
-- [x] Monitoring & backup
+- [x] Commit semua perubahan
+- [x] Push ke branch `fix/cms-authorization-ux`
+- [x] Buat Pull Request ke `main`
+
+## Fase 6: Deployment Dokploy
+
+- [ ] Buat **Github App** di Dokploy, pointing ke repo `Yaosanz/suryacipta`
+- [ ] Pilih branch `main` (setelah PR di-merge)
+- [ ] Compose path: `./docker-compose.yml`
+- [ ] Set environment variables (via Dokploy Secrets):
+      | Variable | Keterangan |
+      |---|---|
+      | `APP_KEY` | Generate with `php artisan key:generate --show` |
+      | `DB_PASSWORD` | Password database user |
+      | `DB_ROOT_PASSWORD` | Password MySQL root |
+      | `FRONTEND_URL` | `https://suryaciptaestetika.co.id` |
+      | `BACKEND_URL` | `https://api.suryaciptaestetika.co.id` |
+      | `NEXT_PUBLIC_WHATSAPP_NUMBER` | `6281282333021` |
+      | `NEXT_PUBLIC_GA_ID` | (optional) Google Analytics ID |
+- [ ] Deploy — migration jalan otomatis via entrypoint
+- [ ] Bootstrap admin: `docker exec -it <backend_container> php artisan cms:create-admin`
+- [ ] Setup domain & TLS di Traefik/Dokploy
+- [ ] Test: buka website, cek produk, portofolio, blog, form kontak

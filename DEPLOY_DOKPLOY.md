@@ -79,6 +79,18 @@ Set environment variables berikut di Dokploy project settings → **Environment*
 | `NEXT_PUBLIC_API_URL`  | (lihat catatan)           | URL API backend + `/api`                       |
 | `CMS_API_URL`          | `http://backend:8080/api` | URL internal Docker untuk server-side fetching |
 
+> **Penting:** `NEXT_PUBLIC_API_URL` dipakai ganda:
+>
+> 1. **Build time** — di-inject ke bundle browser (untuk fetch client-side & konstruksi URL aset).
+> 2. **Runtime** — dipakai server untuk me-resolve path aset (`/storage/...`) menjadi URL publik.
+>
+> Jadi `NEXT_PUBLIC_API_URL` **harus diisi URL publik backend** (bukan `http://backend:8080`),
+> karena browser pengguna tidak bisa menjangkau hostname Docker internal.
+>
+> Gambar CMS di-render langsung dari URL backend (`unoptimized`) untuk menghindari
+> proteksi SSRF Next.js yang memblokir IP privat saat image optimizer mencoba fetch.
+> Image sudah dikompresi saat upload, jadi optimasi Next.js tidak diperlukan.
+
 ### 3.3 Variable OPSIONAL
 
 | Variable                      | Contoh Value        | Keterangan                                                  |

@@ -17,6 +17,9 @@ services:
       - "3000"
     environment:
       CMS_API_URL: "http://backend:8080/api"
+      # Runtime env for server-side asset URL resolution. Public origin must be
+      # reachable by browsers, unlike CMS_API_URL (internal Docker hostname).
+      NEXT_PUBLIC_API_URL: "${BACKEND_URL:?BACKEND_URL is required}/api"
     networks:
       - edge
     read_only: true

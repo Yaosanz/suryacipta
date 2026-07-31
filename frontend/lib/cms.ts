@@ -143,7 +143,13 @@ const cmsFetchOptions = {
   headers: { Accept: 'application/json' },
 } as const;
 
-function apiBaseUrl(): string {
+/**
+ * Server-to-server CMS API base URL.
+ *
+ * Prefers CMS_API_URL (Docker-internal, e.g. http://backend:8080/api) because
+ * the Next.js server can reach it directly. Falls back to NEXT_PUBLIC_API_URL.
+ */
+function cmsApiUrl(): string {
   const baseUrl = process.env.CMS_API_URL ?? process.env.NEXT_PUBLIC_API_URL;
 
   if (!baseUrl) {
@@ -154,9 +160,24 @@ function apiBaseUrl(): string {
 }
 
 /**
- * Resolve a relative asset path (e.g. /storage/xxx.jpg) against the API origin.
- * The backend now returns relative paths so the frontend can build the correct
- * absolute URL regardless of Docker internal hostnames.
+ * Public-facing API origin used to build absolute asset URLs that the browser
+ * can reach. In Docker, CMS_API_URL points to an internal hostname (backend),
+ * so assets must be resolved against the public NEXT_PUBLIC_API_URL instead.
+ */
+function publicApiOrigin(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.CMS_API_URL;
+
+  if (!baseUrl) {
+    throw new Error('NEXT_PUBLIC_API_URL wajib dikonfigurasi untuk URL aset publik.');
+  }
+
+  return baseUrl.replace(/\/$/, '').replace(/\/api$/, '');
+}
+
+/**
+ * Resolve a relative asset path (e.g. /storage/xxx.jpg) against the public API
+ * origin. The backend returns relative paths so the frontend can build the
+ * correct absolute URL regardless of Docker internal hostnames.
  */
 function resolveAssetUrl(path: string | null | undefined): string | null {
   if (!path) return null;
@@ -166,8 +187,8 @@ function resolveAssetUrl(path: string | null | undefined): string | null {
     return path;
   }
 
-  // Relative path — resolve against API base URL.
-  const base = apiBaseUrl();
+  // Relative path — resolve against the public API origin.
+  const base = publicApiOrigin();
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return `${base}${normalized}`;
 }
@@ -184,7 +205,7 @@ function resolveVideo(video: CmsVideo | null | undefined): CmsVideo | null | und
 }
 
 async function fetchCms<T>(path: string): Promise<T | null> {
-  const response = await fetch(`${apiBaseUrl()}/api${path}`, cmsFetchOptions);
+  const response = await fetch(`${cmsApiUrl()}/api${path}`, cmsFetchOptions);
 
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`CMS merespons dengan status ${response.status} untuk ${path}.`);
