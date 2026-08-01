@@ -1,23 +1,36 @@
 #!/bin/sh
 set -eu
 
-umask 027
+cd /var/www/html
 
 mkdir -p \
-  /tmp/apache2-lock \
-  /tmp/apache2-log \
-  /tmp/apache2-run \
-  bootstrap/cache \
-  storage/framework/cache/data \
-  storage/framework/sessions \
-  storage/framework/views
-
-php artisan optimize:clear
+    bootstrap/cache \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
-  php artisan migrate --force
+    echo "Waiting for database..."
+
+    attempts=0
+
+    until php artisan db:monitor >/dev/null 2>&1; do
+        attempts=$((attempts + 1))
+
+        if [ "$attempts" -ge 30 ]; then
+            echo "Database did not become available."
+            exit 1
+        fi
+
+        sleep 2
+    done
+
+    php artisan migrate --force
 fi
 
-php artisan optimize
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 
 exec "$@"
