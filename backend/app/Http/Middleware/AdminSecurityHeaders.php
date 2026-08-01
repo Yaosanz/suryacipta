@@ -21,7 +21,8 @@ class AdminSecurityHeaders
             'Content-Security-Policy',
             "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; ".
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; ".
-            "img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'"
+            "img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self' blob:; ".
+            "font-src 'self' data:; connect-src 'self'"
         );
 
         if (app()->isProduction()) {

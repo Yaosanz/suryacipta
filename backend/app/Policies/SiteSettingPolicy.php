@@ -8,9 +8,14 @@ use Illuminate\Support\Facades\DB;
 
 class SiteSettingPolicy
 {
+    public function before(User $user): ?bool
+    {
+        return $user->is_active ? null : false;
+    }
+
     public function viewAny(User $user): bool
     {
-        return $user->is_active && $user->role->canManageSettings();
+        return $user->role->canManageSettings();
     }
 
     public function view(User $user, SiteSetting $setting): bool
@@ -34,6 +39,36 @@ class SiteSettingPolicy
     }
 
     public function deleteAny(User $user): bool
+    {
+        return false;
+    }
+
+    public function restore(User $user, SiteSetting $setting): bool
+    {
+        return false;
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return false;
+    }
+
+    public function forceDelete(User $user, SiteSetting $setting): bool
+    {
+        return false;
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return false;
+    }
+
+    public function replicate(User $user, SiteSetting $setting): bool
+    {
+        return false;
+    }
+
+    public function reorder(User $user): bool
     {
         return false;
     }

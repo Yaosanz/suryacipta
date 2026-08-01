@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\ClearsCmsCache;
+use App\Models\Concerns\RecordsDetailedActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Testimonial extends Model
 {
-    use ClearsCmsCache, LogsActivity, SoftDeletes;
+    use ClearsCmsCache, LogsActivity, RecordsDetailedActivity, SoftDeletes;
 
     protected $fillable = ['name', 'company_role', 'quote', 'rating', 'is_published', 'sort_order'];
 

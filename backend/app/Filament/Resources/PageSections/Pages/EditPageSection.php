@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\PageSections\Pages;
 
 use App\Filament\Resources\PageSections\PageSectionResource;
+use App\Filament\Support\Pages\EditCmsRecord;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
-use Filament\Resources\Pages\EditRecord;
 
-class EditPageSection extends EditRecord
+class EditPageSection extends EditCmsRecord
 {
     protected static string $resource = PageSectionResource::class;
 

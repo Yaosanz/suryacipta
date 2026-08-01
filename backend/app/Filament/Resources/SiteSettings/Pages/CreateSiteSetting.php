@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\SiteSettings\Pages;
 
 use App\Filament\Resources\SiteSettings\SiteSettingResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Support\Pages\CreateCmsRecord;
 
-class CreateSiteSetting extends CreateRecord
+class CreateSiteSetting extends CreateCmsRecord
 {
     protected static string $resource = SiteSettingResource::class;
 }

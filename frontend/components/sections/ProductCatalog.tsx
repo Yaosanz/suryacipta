@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/common/ProductCard";
-import { PRODUCTS, type Product } from "@/lib/constants";
+import type { Product } from "@/lib/cms-types";
 
 /** Katalog produk lengkap dengan filter kategori. */
-export default function ProductCatalog({ items = [...PRODUCTS] }: { items?: Product[] }) {
+export default function ProductCatalog({ items }: { items: Product[] }) {
   const categories = ["Semua", ...Array.from(new Set(items.map((item) => item.category)))];
   const [active, setActive] = useState("Semua");
   const products = useMemo(

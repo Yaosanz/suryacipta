@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import PortfolioCard from "@/components/common/PortfolioCard";
-import { PORTFOLIO, type PortfolioItem } from "@/lib/constants";
+import type { PortfolioItem } from "@/lib/cms-types";
 
 /** Galeri portofolio terfilter dengan dialog detail native. */
-export default function PortfolioGallery({ projects = [...PORTFOLIO] }: { projects?: PortfolioItem[] }) {
+export default function PortfolioGallery({ projects }: { projects: PortfolioItem[] }) {
   const categories = ["Semua", ...Array.from(new Set(projects.map((item) => item.category)))];
   const [active, setActive] = useState("Semua");
   const [selected, setSelected] = useState<PortfolioItem | null>(null);
@@ -46,7 +46,7 @@ export default function PortfolioGallery({ projects = [...PORTFOLIO] }: { projec
           onClick={() => setSelected(null)}
         >
           <div
-            className="relative w-full max-w-xl rounded-md bg-white p-7"
+            className="relative max-h-[calc(100svh-2rem)] w-full max-w-2xl overflow-y-auto rounded-md bg-white p-7"
             onClick={(event) => event.stopPropagation()}
           >
             <button
@@ -62,6 +62,25 @@ export default function PortfolioGallery({ projects = [...PORTFOLIO] }: { projec
               {selected.title}
             </h2>
             <p className="mt-2 text-sm font-semibold text-muted">{selected.location}</p>
+            {selected.clientName && (
+              <p className="mt-2 text-sm text-muted">
+                Klien: <span className="font-semibold text-navy">{selected.clientName}</span>
+              </p>
+            )}
+            {selected.video && (
+              <div className="mt-5 aspect-video overflow-hidden rounded-md bg-navy-dark">
+                <video
+                  className="size-full object-contain"
+                  poster={selected.image ?? undefined}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  aria-label={selected.video.alt ?? `Video proyek ${selected.title}`}
+                >
+                  <source src={selected.video.url} type="video/mp4" />
+                </video>
+              </div>
+            )}
             <p className="mt-5 leading-7 text-muted">{selected.description}</p>
           </div>
         </div>

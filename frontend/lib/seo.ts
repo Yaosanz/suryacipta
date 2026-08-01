@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { COMPANY } from "./constants";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://suryaciptaestetika.co.id";
 
@@ -15,7 +14,7 @@ export function createPageMetadata(
     description,
     alternates: { canonical },
     openGraph: {
-      title: `${title} | ${COMPANY.shortName}`,
+      title,
       description,
       url: canonical,
       locale: "id_ID",

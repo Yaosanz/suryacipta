@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\PortfolioProjects\Pages;
 
 use App\Filament\Resources\PortfolioProjects\PortfolioProjectResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Support\Pages\CreateCmsRecord;
 
-class CreatePortfolioProject extends CreateRecord
+class CreatePortfolioProject extends CreateCmsRecord
 {
     protected static string $resource = PortfolioProjectResource::class;
 }

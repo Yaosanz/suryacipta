@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
-import { COMPANY } from "@/lib/constants";
 
 /** Tombol WhatsApp kontekstual yang tidak mengganggu tampilan awal desktop. */
-export default function WhatsAppFloat() {
+export default function WhatsAppFloat({ whatsapp }: { whatsapp: string }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -23,7 +22,7 @@ export default function WhatsAppFloat() {
 
   return (
     <a
-      href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent(
+      href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(
         "Halo, saya ingin konsultasi tentang produk GRC Surya Cipta Estetica. Mohon informasinya.",
       )}`}
       target="_blank"

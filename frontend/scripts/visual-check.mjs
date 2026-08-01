@@ -21,6 +21,15 @@ for (const viewport of [
   });
 
   await page.goto("http://localhost:3000", { waitUntil: "networkidle" });
+  await page.evaluate(async () => {
+    const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+    for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight * 0.75) {
+      window.scrollTo({ top: y, behavior: "instant" });
+      await delay(80);
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
+    await delay(150);
+  });
   const metrics = await page.evaluate(() => {
     const images = [...document.images];
     const overflowing = [...document.querySelectorAll("body *")]
@@ -45,7 +54,7 @@ for (const viewport of [
 
   await page.screenshot({
     path: `../visual-${viewport.name}.png`,
-    fullPage: false,
+    fullPage: true,
   });
   results.push({ viewport, ...metrics, consoleErrors });
   await page.close();

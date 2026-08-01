@@ -1,23 +1,33 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Check } from "lucide-react";
-import type { Product } from "@/lib/constants";
+import MediaPlaceholder from "@/components/common/MediaPlaceholder";
+import type { Product } from "@/lib/cms-types";
 
 /** Ringkasan produk GRC untuk listing dan homepage. */
 export default function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group overflow-hidden rounded-md border border-line bg-white">
       <div className="relative aspect-[4/3] overflow-hidden">
-        <Image
-          src={product.image}
-          alt={`${product.name} produksi Surya Cipta Estetica`}
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {product.image ? (
+          <Image
+            src={product.image}
+            alt={product.imageAlt ?? product.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <MediaPlaceholder label={`Foto ${product.name} belum tersedia`} />
+        )}
         <span className="absolute left-4 top-4 rounded-sm bg-navy px-3 py-1 text-xs font-bold text-white">
           {product.category}
         </span>
+        {product.featured && (
+          <span className="absolute right-4 top-4 rounded-sm bg-gold px-3 py-1 text-xs font-bold text-navy-dark">
+            Unggulan
+          </span>
+        )}
       </div>
       <div className="p-5">
         <h3 className="font-display text-2xl font-bold text-navy-dark">{product.name}</h3>

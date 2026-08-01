@@ -17,8 +17,6 @@ auth.json
 coverage
 database/*.sqlite
 node_modules
-package.json
-package-lock.json
 phpunit.xml
 public/build
 public/hot
@@ -30,7 +28,6 @@ storage/framework/views/*
 storage/logs/*
 tests
 vendor
-vite.config.js
 *.log
 *.pem
 *.key

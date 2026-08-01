@@ -5,6 +5,7 @@ namespace App\Filament\Resources\SiteSettings;
 use App\Filament\Resources\SiteSettings\Pages\CreateSiteSetting;
 use App\Filament\Resources\SiteSettings\Pages\EditSiteSetting;
 use App\Filament\Resources\SiteSettings\Pages\ListSiteSettings;
+use App\Filament\Resources\SiteSettings\Pages\ViewSiteSetting;
 use App\Filament\Resources\SiteSettings\Schemas\SiteSettingForm;
 use App\Filament\Resources\SiteSettings\Tables\SiteSettingsTable;
 use App\Models\SiteSetting;
@@ -18,17 +19,19 @@ class SiteSettingResource extends Resource
 {
     protected static ?string $model = SiteSetting::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Sistem';
 
-    protected static ?string $navigationLabel = 'Identitas Situs';
+    protected static ?string $navigationLabel = 'Profil Website';
 
     protected static ?int $navigationSort = 10;
 
     protected static ?string $modelLabel = 'pengaturan situs';
 
     protected static ?string $pluralModelLabel = 'pengaturan situs';
+
+    protected static ?string $recordTitleAttribute = 'company_name';
 
     public static function form(Schema $schema): Schema
     {
@@ -52,6 +55,7 @@ class SiteSettingResource extends Resource
         return [
             'index' => ListSiteSettings::route('/'),
             'create' => CreateSiteSetting::route('/create'),
+            'view' => ViewSiteSetting::route('/{record}'),
             'edit' => EditSiteSetting::route('/{record}/edit'),
         ];
     }

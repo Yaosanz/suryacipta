@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, MessageCircle, X } from "lucide-react";
-import { COMPANY } from "@/lib/constants";
+import type { CmsHomeContent } from "@/lib/cms";
 
 const links = [
   { href: "/", label: "Beranda" },
@@ -15,7 +16,7 @@ const links = [
 ];
 
 /** Navigasi utama responsif dengan menu mobile yang dapat diakses keyboard. */
-export default function Navbar() {
+export default function Navbar({ site }: { site: CmsHomeContent["site"] }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -35,14 +36,38 @@ export default function Navbar() {
       }`}
     >
       <div className="container-site flex h-[76px] items-center justify-between">
-        <Link href="/" className="min-w-0" aria-label={`${COMPANY.shortName}, beranda`}>
-          <span className="block font-display text-xl font-bold leading-none">Surya Cipta</span>
-          <span
-            className={`mt-1 block text-[10px] font-bold uppercase ${
-              scrolled || open ? "text-gold" : "text-gold-light"
-            }`}
-          >
-            Estetica Mandiri
+        <Link
+          href="/"
+          className="flex min-w-0 max-w-[300px] items-center gap-3"
+          aria-label={`${site.companyName}, beranda`}
+        >
+          {site.logo && (
+            <Image
+              src={site.logo}
+              alt={site.logoAlt || `Logo ${site.companyName}`}
+              width={52}
+              height={52}
+              sizes="52px"
+              priority
+              unoptimized
+              className={`size-[52px] shrink-0 object-contain ${
+                scrolled || open
+                  ? "drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]"
+                  : "drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)]"
+              }`}
+            />
+          )}
+          <span className="min-w-0">
+            <span className="line-clamp-2 block font-display text-sm font-bold leading-tight sm:text-base">
+              {site.companyName}
+            </span>
+            <span
+              className={`mt-1 hidden truncate text-[10px] font-bold sm:block ${
+                scrolled || open ? "text-gold" : "text-gold-light"
+              }`}
+            >
+              {site.tagline}
+            </span>
           </span>
         </Link>
 
@@ -56,7 +81,7 @@ export default function Navbar() {
 
         <a
           className="btn-whatsapp ml-4 hidden lg:inline-flex"
-          href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent(
+          href={`https://wa.me/${site.whatsapp}?text=${encodeURIComponent(
             "Halo, saya ingin konsultasi tentang produk GRC Surya Cipta Estetica.",
           )}`}
           target="_blank"
@@ -92,7 +117,7 @@ export default function Navbar() {
           ))}
           <a
             className="btn-whatsapp mt-4 w-full"
-            href={`https://wa.me/${COMPANY.whatsapp}`}
+            href={`https://wa.me/${site.whatsapp}`}
             target="_blank"
             rel="noreferrer"
           >

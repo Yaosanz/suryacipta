@@ -23,6 +23,7 @@
 !/storage/app/private/.gitignore
 /storage/pail
 /storage/framework/testing/*
+/storage/framework/qa-tmp/
 /vendor
 *.sql
 *.dump
@@ -33,3 +34,4 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+*.tmp

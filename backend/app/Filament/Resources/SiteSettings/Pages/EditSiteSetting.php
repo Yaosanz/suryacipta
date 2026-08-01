@@ -3,17 +3,14 @@
 namespace App\Filament\Resources\SiteSettings\Pages;
 
 use App\Filament\Resources\SiteSettings\SiteSettingResource;
-use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Support\Pages\EditCmsRecord;
 
-class EditSiteSetting extends EditRecord
+class EditSiteSetting extends EditCmsRecord
 {
     protected static string $resource = SiteSettingResource::class;
 
-    protected function getHeaderActions(): array
+    public function getSubheading(): ?string
     {
-        return [
-            DeleteAction::make(),
-        ];
+        return 'Perubahan di halaman ini berlaku sebagai identitas utama website.';
     }
 }

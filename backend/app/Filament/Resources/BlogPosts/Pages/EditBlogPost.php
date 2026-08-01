@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\BlogPosts\Pages;
 
 use App\Filament\Resources\BlogPosts\BlogPostResource;
+use App\Filament\Support\Pages\EditCmsRecord;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
-use Filament\Resources\Pages\EditRecord;
 
-class EditBlogPost extends EditRecord
+class EditBlogPost extends EditCmsRecord
 {
     protected static string $resource = BlogPostResource::class;
 

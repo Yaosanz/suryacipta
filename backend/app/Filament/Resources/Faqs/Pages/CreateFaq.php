@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Faqs\Pages;
 
 use App\Filament\Resources\Faqs\FaqResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Support\Pages\CreateCmsRecord;
 
-class CreateFaq extends CreateRecord
+class CreateFaq extends CreateCmsRecord
 {
     protected static string $resource = FaqResource::class;
 }

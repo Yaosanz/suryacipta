@@ -24,7 +24,8 @@ Browser
 
 Next.js mengambil konten terbit dari Laravel dengan revalidasi 60 detik. Draft, artikel terjadwal,
 inquiry, pengguna, dan audit tidak pernah dimasukkan ke payload publik. Docker Compose menjalankan
-frontend, backend, dan MySQL sebagai container terpisah dalam satu release atomik.
+frontend dan backend sebagai container terpisah dalam satu release atomik; MySQL production dikelola
+sebagai managed database oleh Dokploy.
 
 ## Fitur
 
@@ -46,24 +47,24 @@ frontend, backend, dan MySQL sebagai container terpisah dalam satu release atomi
 - MFA TOTP wajib beserta recovery code.
 - Strict model authorization melalui Laravel Policy.
 
-| Role | Hak akses |
-|---|---|
-| `Super Admin` | Pengguna, pengaturan, seluruh konten, inquiry, media, dan audit |
-| `Content Manager` | Konten terbit, media, pengaturan situs, dan inquiry |
-| `Editor` | Membuat dan mengubah draft; tidak dapat menerbitkan atau menghapus konten |
+| Role              | Hak akses                                                                 |
+| ----------------- | ------------------------------------------------------------------------- |
+| `Super Admin`     | Pengguna, pengaturan, seluruh konten, inquiry, media, dan audit           |
+| `Content Manager` | Konten terbit, media, pengaturan situs, dan inquiry                       |
+| `Editor`          | Membuat dan mengubah draft; tidak dapat menerbitkan atau menghapus konten |
 
 ## Stack
 
-| Area | Teknologi |
-|---|---|
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
-| Form | React Hook Form, Zod |
-| Backend | PHP 8.3+, Laravel 13 |
-| CMS | Filament 5, Livewire 4 |
-| Audit | Spatie Laravel Activitylog 5 |
-| Database | MySQL 8.4 |
-| Deployment | Docker, Docker Compose, Dokploy, Traefik |
-| Quality | ESLint, TypeScript, PHPUnit, Laravel Pint, Dependabot |
+| Area       | Teknologi                                             |
+| ---------- | ----------------------------------------------------- |
+| Frontend   | Next.js 16, React 19, TypeScript, Tailwind CSS 4      |
+| Form       | React Hook Form, Zod                                  |
+| Backend    | PHP 8.3+, Laravel 13                                  |
+| CMS        | Filament 5, Livewire 4                                |
+| Audit      | Spatie Laravel Activitylog 5                          |
+| Database   | MySQL 8.4                                             |
+| Deployment | Docker, Docker Compose, Dokploy, Traefik              |
+| Quality    | ESLint, TypeScript, PHPUnit, Laravel Pint, Dependabot |
 
 ## Struktur Repository
 
@@ -135,28 +136,28 @@ Website tersedia di `http://127.0.0.1:3000`.
 
 ### Konten Publik
 
-| Method | Endpoint | Keterangan |
-|---|---|---|
-| `GET` | `/api/v1/content` | Identitas, section, produk, portofolio, artikel, FAQ, testimonial |
-| `GET` | `/api/v1/products/{slug}` | Detail produk yang sudah terbit |
-| `GET` | `/api/v1/posts/{slug}` | Artikel terbit dengan Markdown tersanitasi |
+| Method | Endpoint                  | Keterangan                                                        |
+| ------ | ------------------------- | ----------------------------------------------------------------- |
+| `GET`  | `/api/v1/content`         | Identitas, section, produk, portofolio, artikel, FAQ, testimonial |
+| `GET`  | `/api/v1/products/{slug}` | Detail produk yang sudah terbit                                   |
+| `GET`  | `/api/v1/posts/{slug}`    | Artikel terbit dengan Markdown tersanitasi                        |
 
 ### Request for Quotation
 
 `POST /api/inquiries` menerima `multipart/form-data`:
 
-| Field | Aturan |
-|---|---|
-| `name` | Wajib, 2-100 karakter |
-| `company` | Opsional, maksimal 120 karakter |
-| `email` | Wajib, email valid |
-| `phone` | Wajib, 8-20 karakter nomor |
-| `projectType` | Wajib, nilai dari allowlist |
-| `estimatedArea` | Opsional, maksimal 30 karakter |
-| `budgetRange` | Opsional, nilai dari allowlist |
-| `message` | Wajib, 20-3000 karakter |
-| `attachment` | Opsional, PDF/JPEG/PNG/WebP, maksimal 5 MB |
-| `website` | Honeypot, harus kosong |
+| Field           | Aturan                                     |
+| --------------- | ------------------------------------------ |
+| `name`          | Wajib, 2-100 karakter                      |
+| `company`       | Opsional, maksimal 120 karakter            |
+| `email`         | Wajib, email valid                         |
+| `phone`         | Wajib, 8-20 karakter nomor                 |
+| `projectType`   | Wajib, nilai dari allowlist                |
+| `estimatedArea` | Opsional, maksimal 30 karakter             |
+| `budgetRange`   | Opsional, nilai dari allowlist             |
+| `message`       | Wajib, 20-3000 karakter                    |
+| `attachment`    | Opsional, PDF/JPEG/PNG/WebP, maksimal 5 MB |
+| `website`       | Honeypot, harus kosong                     |
 
 Respons sukses menggunakan HTTP `201`; validasi `422`; rate limit `429`.
 
@@ -167,9 +168,12 @@ di secret manager Dokploy, bukan di Git:
 
 - `APP_KEY`
 - `DB_PASSWORD`
-- `DB_ROOT_PASSWORD`
 - kredensial mail provider
 - token layanan eksternal yang bersifat privat
+
+`DB_HOST` pada production mengarah ke hostname internal managed MySQL Dokploy
+(contoh: `suryacipta-suryacipta-iztnsy`), bukan IP publik. Password root MySQL tidak pernah
+dibutuhkan oleh aplikasi.
 
 `NEXT_PUBLIC_*` tertanam ke bundle browser dan tidak boleh berisi secret. Password reset CMS
 nonaktif secara default; aktifkan `CMS_PASSWORD_RESET_ENABLED=true` hanya setelah mail provider
@@ -187,9 +191,9 @@ docker compose up -d
 docker compose ps
 ```
 
-Compose tidak mempublikasikan MySQL ke host. Data persisten disimpan pada:
+Compose tidak memuat service MySQL — database production dikelola oleh Dokploy sebagai managed
+MySQL (lihat `.env.docker.example` untuk `DB_HOST`). Data persisten aplikasi disimpan pada:
 
-- `database_data`
 - `backend_uploads`
 - `backend_media`
 
@@ -246,7 +250,7 @@ Breaking change menggunakan `!`, misalnya `feat(api)!: revise public content sch
 
 Dokploy harus mengambil branch `main` dan Compose path `./docker-compose.yml`. Frontend dan backend
 tetap menjadi service terpisah, tetapi dirilis dari commit yang sama. Migration berjalan melalui
-entrypoint backend setelah database sehat.
+entrypoint backend setelah koneksi ke managed MySQL Dokploy berhasil.
 
 Ikuti [DEPLOY_DOKPLOY.md](./DEPLOY_DOKPLOY.md) untuk environment, domain, TLS, bootstrap admin,
 backup, smoke test, monitoring, dan rollback.

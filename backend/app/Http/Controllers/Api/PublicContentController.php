@@ -9,9 +9,9 @@ use App\Models\PageSection;
 use App\Models\PortfolioProject;
 use App\Models\Product;
 use App\Models\SiteSetting;
+use App\Models\TeamMember;
 use App\Models\Testimonial;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -19,16 +19,16 @@ class PublicContentController extends Controller
 {
     public function index(): JsonResponse
     {
-        $content = Cache::remember('cms.public.v1', now()->addMinutes(5), fn (): array => [
+        $content = [
             'site' => $this->site(),
             'sections' => PageSection::query()
                 ->where('is_enabled', true)->orderBy('sort_order')->get()
                 ->map(fn (PageSection $section): array => $this->section($section))->values()->all(),
-            'products' => Product::query()->published()->orderBy('sort_order')->get()
+            'products' => Product::query()->published()->orderByDesc('is_featured')->orderBy('sort_order')->get()
                 ->map(fn (Product $product): array => $this->transformProduct($product))->values()->all(),
-            'portfolio' => PortfolioProject::query()->published()->orderBy('sort_order')->get()
+            'portfolio' => PortfolioProject::query()->published()->orderByDesc('is_featured')->orderBy('sort_order')->get()
                 ->map(fn (PortfolioProject $project): array => $this->project($project))->values()->all(),
-            'posts' => BlogPost::query()->published()->latest('published_at')->get()
+            'posts' => BlogPost::query()->with('author')->published()->latest('published_at')->get()
                 ->map(fn (BlogPost $post): array => $this->transformPost($post, false))->values()->all(),
             'faqs' => Faq::query()->published()->orderBy('sort_order')->get()
                 ->map(fn (Faq $faq): array => [
@@ -43,7 +43,16 @@ class PublicContentController extends Controller
                     'quote' => $testimonial->quote,
                     'rating' => $testimonial->rating,
                 ])->values()->all(),
-        ]);
+            'team' => TeamMember::query()->published()->orderBy('sort_order')->get()
+                ->map(fn (TeamMember $member): array => [
+                    'name' => $member->name,
+                    'role' => $member->role,
+                    'bio' => $member->bio,
+                    'photo' => $this->assetUrl($member->photo_path),
+                    'photoAlt' => $member->photo_alt,
+                    'linkedinUrl' => $this->safeLink($member->linkedin_url),
+                ])->values()->all(),
+        ];
 
         return $this->respond($content);
     }
@@ -93,15 +102,32 @@ class PublicContentController extends Controller
 
     private function section(PageSection $section): array
     {
+        $content = $section->content ?? [];
+
+        foreach (['secondaryCtaUrl', 'mapUrl'] as $linkField) {
+            if (array_key_exists($linkField, $content)) {
+                $safeLink = $this->safeLink(
+                    is_string($content[$linkField]) ? $content[$linkField] : null,
+                );
+
+                if ($safeLink === null) {
+                    unset($content[$linkField]);
+                } else {
+                    $content[$linkField] = $safeLink;
+                }
+            }
+        }
+
         return [
             'page' => $section->page,
             'key' => $section->section_key,
             'eyebrow' => $section->eyebrow,
             'title' => $section->title,
             'description' => $section->description,
-            'content' => $section->content ?? [],
+            'content' => (object) $content,
             'image' => $this->assetUrl($section->image_path),
             'imageAlt' => $section->image_alt,
+            'video' => $this->video($section),
             'cta' => [
                 'label' => $section->primary_cta_label,
                 'url' => $this->safeLink($section->primary_cta_url),
@@ -120,6 +146,7 @@ class PublicContentController extends Controller
             'features' => $product->features ?? [],
             'image' => $this->assetUrl($product->image_path),
             'imageAlt' => $product->image_alt,
+            'video' => $this->video($product),
             'featured' => $product->is_featured,
             'seo' => ['title' => $product->seo_title, 'description' => $product->seo_description],
         ];
@@ -130,12 +157,14 @@ class PublicContentController extends Controller
         return [
             'slug' => $project->slug,
             'title' => $project->title,
+            'clientName' => $project->client_name,
             'location' => $project->location,
             'category' => $project->category,
             'year' => $project->year,
             'description' => $project->description,
             'image' => $this->assetUrl($project->image_path),
             'imageAlt' => $project->image_alt,
+            'video' => $this->video($project),
             'featured' => $project->is_featured,
         ];
     }
@@ -146,8 +175,10 @@ class PublicContentController extends Controller
             'slug' => $post->slug,
             'title' => $post->title,
             'excerpt' => $post->excerpt,
+            'authorName' => $post->author?->name,
             'image' => $this->assetUrl($post->featured_image_path),
             'imageAlt' => $post->featured_image_alt,
+            'video' => $this->video($post),
             'publishedAt' => $post->published_at?->toAtomString(),
             'seo' => ['title' => $post->seo_title, 'description' => $post->seo_description],
         ];
@@ -162,13 +193,41 @@ class PublicContentController extends Controller
         return $data;
     }
 
+    /**
+     * Return a relative asset path (e.g. /storage/xxx.jpg) so the frontend
+     * can resolve it against its own API origin. This avoids baking Docker
+     * internal hostnames into the payload.
+     */
     private function assetUrl(?string $path): ?string
     {
         if (blank($path) || Str::contains($path, ['..', '\\'])) {
             return null;
         }
 
-        return url(Storage::disk('public')->url($path));
+        // Storage::disk('public')->url() returns '/storage/xxx.jpg' by default.
+        return Storage::disk('public')->url($path);
+    }
+
+    private function video(object $record): ?array
+    {
+        if (blank($record->video_path ?? null)) {
+            return null;
+        }
+
+        $url = $this->assetUrl($record->video_path);
+
+        if ($url === null) {
+            return null;
+        }
+
+        return [
+            'url' => $url,
+            'alt' => $record->video_alt,
+            'width' => $record->video_width,
+            'height' => $record->video_height,
+            'duration' => $record->video_duration,
+            'size' => $record->video_size,
+        ];
     }
 
     private function safeLinks(array $links): array
@@ -187,6 +246,10 @@ class PublicContentController extends Controller
             return $url;
         }
 
+        if (preg_match('/\Atel:\+?[0-9]{8,15}\z/', $url) === 1) {
+            return $url;
+        }
+
         return filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, PHP_URL_SCHEME) === 'https'
             ? $url
             : null;
@@ -195,7 +258,8 @@ class PublicContentController extends Controller
     private function respond(array $data): JsonResponse
     {
         return response()->json(['data' => $data])
-            ->header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+            ->header('Cache-Control', 'private, no-store, max-age=0')
+            ->header('Pragma', 'no-cache')
             ->header('X-Content-Type-Options', 'nosniff');
     }
 }

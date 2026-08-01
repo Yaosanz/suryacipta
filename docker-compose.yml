@@ -11,114 +11,127 @@ services:
         NEXT_PUBLIC_WHATSAPP_NUMBER: "${NEXT_PUBLIC_WHATSAPP_NUMBER:-6281282333021}"
         NEXT_PUBLIC_GA_ID: "${NEXT_PUBLIC_GA_ID:-}"
         GOOGLE_SITE_VERIFICATION: "${GOOGLE_SITE_VERIFICATION:-}"
+
     restart: unless-stopped
     init: true
+
     expose:
       - "3000"
+
     environment:
-      CMS_API_URL: "http://backend:8080/api"
+      # Komunikasi internal antarkontainer.
+      CMS_API_URL: "https://suryacipta-backend-qweqpx-07208d-70-153-193-120.sslip.io/api"
+
+      # URL publik untuk browser.
+      NEXT_PUBLIC_SITE_URL: "${FRONTEND_URL:?FRONTEND_URL is required}"
+      NEXT_PUBLIC_API_URL: "${BACKEND_URL:?BACKEND_URL is required}/api"
+
+    depends_on:
+      - backend
+
     networks:
-      - edge
+      - app-network
+
     read_only: true
+
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
       - /app/.next/cache:rw,nosuid,nodev,size=256m,uid=1001,gid=1001
+
     security_opt:
       - no-new-privileges:true
+
     cap_drop:
       - ALL
+
     pids_limit: 200
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+
     restart: unless-stopped
     init: true
+
     expose:
       - "8080"
+
     environment:
       APP_NAME: "Surya Cipta Estetica API"
       APP_ENV: production
       APP_KEY: "${APP_KEY:?APP_KEY is required}"
       APP_DEBUG: "false"
       APP_URL: "${BACKEND_URL:?BACKEND_URL is required}"
+
       APP_LOCALE: id
       APP_FALLBACK_LOCALE: id
+
       BCRYPT_ROUNDS: "12"
+
       LOG_CHANNEL: stderr
       LOG_DEPRECATIONS_CHANNEL: "null"
       LOG_LEVEL: warning
+
       DB_CONNECTION: mysql
-      DB_HOST: database
-      DB_PORT: "3306"
-      DB_DATABASE: "${DB_DATABASE:-suryacipta}"
-      DB_USERNAME: "${DB_USERNAME:-suryacipta_app}"
+      DB_HOST: "${DB_HOST:?DB_HOST is required}"
+      DB_PORT: "${DB_PORT:-3306}"
+      DB_DATABASE: "${DB_DATABASE:?DB_DATABASE is required}"
+      DB_USERNAME: "${DB_USERNAME:?DB_USERNAME is required}"
       DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
+
       CACHE_STORE: database
       SESSION_DRIVER: database
       SESSION_ENCRYPT: "true"
       SESSION_SECURE_COOKIE: "true"
+      SESSION_SAME_SITE: lax
+
       QUEUE_CONNECTION: sync
       FILESYSTEM_DISK: local
+
       CORS_ALLOWED_ORIGINS: "${FRONTEND_URL:?FRONTEND_URL is required}"
       REQUIRE_ORIGIN_HEADER: "true"
       TRUSTED_PROXIES: "*"
+
       RUN_MIGRATIONS: "true"
       CMS_PASSWORD_RESET_ENABLED: "${CMS_PASSWORD_RESET_ENABLED:-false}"
-    depends_on:
-      database:
-        condition: service_healthy
+
     volumes:
       - backend_uploads:/var/www/html/storage/app/private
       - backend_media:/var/www/html/storage/app/public
+
     networks:
-      - edge
-      - internal
+      # Untuk komunikasi frontend → backend.
+      - app-network
+
+      # Untuk akses backend → managed MySQL Dokploy.
+      - dokploy-network
+
     read_only: true
+
     tmpfs:
       - /tmp:rw,nosuid,nodev,size=128m,uid=33,gid=33,mode=0770
       - /var/www/html/bootstrap/cache:rw,nosuid,nodev,size=32m,uid=33,gid=33,mode=0770
       - /var/www/html/storage/framework:rw,nosuid,nodev,size=128m,uid=33,gid=33,mode=0770
+      - /var/www/html/storage/logs:rw,nosuid,nodev,size=64m,uid=33,gid=33,mode=0770
+
     security_opt:
       - no-new-privileges:true
+
     cap_drop:
       - ALL
+
     pids_limit: 200
     stop_grace_period: 30s
 
-  database:
-    image: mysql:8.4
-    restart: unless-stopped
-    command:
-      - --local-infile=0
-      - --skip-name-resolve
-    environment:
-      MYSQL_DATABASE: "${DB_DATABASE:-suryacipta}"
-      MYSQL_USER: "${DB_USERNAME:-suryacipta_app}"
-      MYSQL_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
-      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}"
-    volumes:
-      - database_data:/var/lib/mysql
-    networks:
-      - internal
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 300
-    stop_grace_period: 60s
+networks:
+  app-network:
+    driver: bridge
+
+  dokploy-network:
+    external: true
+    name: dokploy-network
 
 volumes:
   backend_uploads:
   backend_media:
-  database_data:
-
-networks:
-  edge:
-  internal:
-    internal: true

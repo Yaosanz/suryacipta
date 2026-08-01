@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PortfolioProjects;
 use App\Filament\Resources\PortfolioProjects\Pages\CreatePortfolioProject;
 use App\Filament\Resources\PortfolioProjects\Pages\EditPortfolioProject;
 use App\Filament\Resources\PortfolioProjects\Pages\ListPortfolioProjects;
+use App\Filament\Resources\PortfolioProjects\Pages\ViewPortfolioProject;
 use App\Filament\Resources\PortfolioProjects\Schemas\PortfolioProjectForm;
 use App\Filament\Resources\PortfolioProjects\Tables\PortfolioProjectsTable;
 use App\Models\PortfolioProject;
@@ -20,7 +21,7 @@ class PortfolioProjectResource extends Resource
 {
     protected static ?string $model = PortfolioProject::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Konten';
 
@@ -31,6 +32,25 @@ class PortfolioProjectResource extends Resource
     protected static ?string $modelLabel = 'proyek';
 
     protected static ?string $pluralModelLabel = 'portofolio';
+
+    protected static ?string $recordTitleAttribute = 'title';
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = PortfolioProject::query()->where('is_published', false)->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Proyek yang belum ditayangkan';
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -54,6 +74,7 @@ class PortfolioProjectResource extends Resource
         return [
             'index' => ListPortfolioProjects::route('/'),
             'create' => CreatePortfolioProject::route('/create'),
+            'view' => ViewPortfolioProject::route('/{record}'),
             'edit' => EditPortfolioProject::route('/{record}/edit'),
         ];
     }

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Inquiry;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -39,6 +41,40 @@ class InquiryApiTest extends TestCase
         $this->assertNotSame('gambar-kerja.pdf', $inquiry->attachment_path);
         Storage::disk('local')->assertExists((string) $inquiry->attachment_path);
         $this->assertDatabaseMissing('inquiries', ['ip_hash' => '127.0.0.1']);
+    }
+
+    public function test_new_inquiry_notifies_only_active_authorized_cms_users(): void
+    {
+        $manager = User::factory()->create([
+            'role' => UserRole::ContentManager,
+            'is_active' => true,
+        ]);
+        $editor = User::factory()->create([
+            'role' => UserRole::Editor,
+            'is_active' => true,
+        ]);
+        $inactiveAdmin = User::factory()->create([
+            'role' => UserRole::SuperAdmin,
+            'is_active' => false,
+        ]);
+
+        $this->postJson('/api/inquiries', [
+            'name' => 'Budi Santoso',
+            'email' => 'notification@example.com',
+            'phone' => '0812 3456 7890',
+            'projectType' => 'Lainnya',
+            'message' => 'Pesan valid untuk menguji notifikasi dashboard CMS.',
+            'website' => '',
+        ])->assertCreated();
+
+        $this->assertCount(1, $manager->fresh()->notifications);
+        $this->assertCount(0, $editor->fresh()->notifications);
+        $this->assertCount(0, $inactiveAdmin->fresh()->notifications);
+
+        $notificationData = json_encode($manager->fresh()->notifications->firstOrFail()->data);
+        $this->assertStringContainsString('Permintaan penawaran baru', $notificationData);
+        $this->assertStringNotContainsString('notification@example.com', $notificationData);
+        $this->assertStringNotContainsString('0812 3456 7890', $notificationData);
     }
 
     public function test_honeypot_and_invalid_payload_are_rejected(): void

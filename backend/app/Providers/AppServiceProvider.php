@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Policies\ActivityPolicy;
+use App\Support\AuditContext;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -33,6 +35,27 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Login::class, function (Login $event): void {
             if ($event->user instanceof User) {
                 $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
+                activity('authentication')
+                    ->causedBy($event->user)
+                    ->event('login')
+                    ->withProperties(array_merge(AuditContext::capture(), [
+                        'actor_email' => $event->user->email,
+                        'actor_role' => $event->user->role->value,
+                    ]))
+                    ->log('Login ke CMS');
+            }
+        });
+
+        Event::listen(Logout::class, function (Logout $event): void {
+            if ($event->user instanceof User) {
+                activity('authentication')
+                    ->causedBy($event->user)
+                    ->event('logout')
+                    ->withProperties(array_merge(AuditContext::capture(), [
+                        'actor_email' => $event->user->email,
+                        'actor_role' => $event->user->role->value,
+                    ]))
+                    ->log('Logout dari CMS');
             }
         });
 
