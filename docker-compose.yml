@@ -20,7 +20,7 @@ services:
 
     environment:
       # Komunikasi internal antarkontainer.
-      CMS_API_URL: "http://backend:8080/api"
+      CMS_API_URL: "https://suryacipta-backend-qweqpx-07208d-70-153-193-120.sslip.io/api"
 
       # URL publik untuk browser.
       NEXT_PUBLIC_SITE_URL: "${FRONTEND_URL:?FRONTEND_URL is required}"
