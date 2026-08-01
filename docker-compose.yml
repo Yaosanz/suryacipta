@@ -11,80 +11,126 @@ services:
         NEXT_PUBLIC_WHATSAPP_NUMBER: "${NEXT_PUBLIC_WHATSAPP_NUMBER:-6281282333021}"
         NEXT_PUBLIC_GA_ID: "${NEXT_PUBLIC_GA_ID:-}"
         GOOGLE_SITE_VERIFICATION: "${GOOGLE_SITE_VERIFICATION:-}"
+
     restart: unless-stopped
     init: true
+
     expose:
       - "3000"
+
     environment:
-      # Internal Docker hostname untuk server-side fetch (server-to-server).
+      # Komunikasi internal antarkontainer.
       CMS_API_URL: "http://backend:8080/api"
-      # Runtime env untuk resolusi URL aset di sisi server. Origin publik
-      # harus bisa dijangkau browser, beda dengan CMS_API_URL.
+
+      # URL publik untuk browser.
+      NEXT_PUBLIC_SITE_URL: "${FRONTEND_URL:?FRONTEND_URL is required}"
       NEXT_PUBLIC_API_URL: "${BACKEND_URL:?BACKEND_URL is required}/api"
+
+    depends_on:
+      - backend
+
+    networks:
+      - app-network
+
     read_only: true
+
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
       - /app/.next/cache:rw,nosuid,nodev,size=256m,uid=1001,gid=1001
+
     security_opt:
       - no-new-privileges:true
+
     cap_drop:
       - ALL
+
     pids_limit: 200
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+
     restart: unless-stopped
     init: true
+
     expose:
       - "8080"
+
     environment:
       APP_NAME: "Surya Cipta Estetica API"
       APP_ENV: production
       APP_KEY: "${APP_KEY:?APP_KEY is required}"
       APP_DEBUG: "false"
       APP_URL: "${BACKEND_URL:?BACKEND_URL is required}"
+
       APP_LOCALE: id
       APP_FALLBACK_LOCALE: id
+
       BCRYPT_ROUNDS: "12"
+
       LOG_CHANNEL: stderr
       LOG_DEPRECATIONS_CHANNEL: "null"
       LOG_LEVEL: warning
+
       DB_CONNECTION: mysql
-      # Managed MySQL dari Dokploy (bukan container database internal).
-      # DB_HOST adalah hostname internal yang tampil di halaman Database
-      # Dokploy, bukan IP publik.
-      DB_HOST: "${DB_HOST:-suryacipta-suryacipta-iztnsy}"
+      DB_HOST: "${DB_HOST:?DB_HOST is required}"
       DB_PORT: "${DB_PORT:-3306}"
-      DB_DATABASE: "${DB_DATABASE:-suryacipta}"
-      DB_USERNAME: "${DB_USERNAME:-mysql}"
+      DB_DATABASE: "${DB_DATABASE:?DB_DATABASE is required}"
+      DB_USERNAME: "${DB_USERNAME:?DB_USERNAME is required}"
       DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
+
       CACHE_STORE: database
       SESSION_DRIVER: database
       SESSION_ENCRYPT: "true"
       SESSION_SECURE_COOKIE: "true"
+      SESSION_SAME_SITE: lax
+
       QUEUE_CONNECTION: sync
       FILESYSTEM_DISK: local
+
       CORS_ALLOWED_ORIGINS: "${FRONTEND_URL:?FRONTEND_URL is required}"
       REQUIRE_ORIGIN_HEADER: "true"
       TRUSTED_PROXIES: "*"
+
       RUN_MIGRATIONS: "true"
       CMS_PASSWORD_RESET_ENABLED: "${CMS_PASSWORD_RESET_ENABLED:-false}"
+
     volumes:
       - backend_uploads:/var/www/html/storage/app/private
       - backend_media:/var/www/html/storage/app/public
+
+    networks:
+      # Untuk komunikasi frontend → backend.
+      - app-network
+
+      # Untuk akses backend → managed MySQL Dokploy.
+      - dokploy-network
+
     read_only: true
+
     tmpfs:
       - /tmp:rw,nosuid,nodev,size=128m,uid=33,gid=33,mode=0770
       - /var/www/html/bootstrap/cache:rw,nosuid,nodev,size=32m,uid=33,gid=33,mode=0770
       - /var/www/html/storage/framework:rw,nosuid,nodev,size=128m,uid=33,gid=33,mode=0770
+      - /var/www/html/storage/logs:rw,nosuid,nodev,size=64m,uid=33,gid=33,mode=0770
+
     security_opt:
       - no-new-privileges:true
+
     cap_drop:
       - ALL
+
     pids_limit: 200
     stop_grace_period: 30s
+
+networks:
+  app-network:
+    driver: bridge
+
+  dokploy-network:
+    external: true
+    name: dokploy-network
 
 volumes:
   backend_uploads:
